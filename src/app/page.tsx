@@ -45,7 +45,15 @@ export default function Home() {
 
       if (data.images && data.images.length > 0) {
         setResultImage(data.images[0].url);
-        setShowSaveDialog(true);
+        // 画像が完全に読み込まれるのを待ってから保存ダイアログを表示
+        const img = new Image();
+        img.onload = () => {
+          setShowSaveDialog(true);
+        };
+        img.onerror = () => {
+          setError('画像の読み込みに失敗しました');
+        };
+        img.src = data.images[0].url;
       }
     } catch (err: unknown) {
       console.error('Synthesis error:', err);

@@ -42,7 +42,8 @@ export default function ClothingGenerator({ onSelectImage }: ClothingGeneratorPr
   const [selectedCategory, setSelectedCategory] = useState<keyof typeof CLOTHING_TEMPLATES>('tops');
   const [customPrompt, setCustomPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
-  // const [generatedImages, setGeneratedImages] = useState<string[]>([]);
+  const [generatedImages, setGeneratedImages] = useState<ReferenceImage[]>([]);
+  const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
 
   const handleGenerate = async () => {
     if (!customPrompt && !selectedCategory) return;
@@ -70,12 +71,11 @@ export default function ClothingGenerator({ onSelectImage }: ClothingGeneratorPr
           description: customPrompt || CLOTHING_TEMPLATES[selectedCategory][0],
         });
 
+        // 生成された画像リストに追加
+        setGeneratedImages(prev => [newImage, ...prev]);
+
         // リストを更新
         setReferenceImages(prev => [newImage, ...prev]);
-
-        // 自動的に選択
-        onSelectImage(data.imageUrl);
-        alert('参考画像を生成しました');
       }
     } catch (error) {
       console.error('画像生成エラー:', error);
@@ -165,26 +165,68 @@ export default function ClothingGenerator({ onSelectImage }: ClothingGeneratorPr
         {isGenerating ? '生成中...' : '参考画像を生成'}
       </button>
 
+      {/* 生成された画像 */}
+      {generatedImages.length > 0 && (
+        <div className="mt-6">
+          <h3 className="text-lg font-medium mb-3">生成された画像</h3>
+          <div className="grid grid-cols-2 gap-3">
+            {generatedImages.map((img) => (
+              <div
+                key={img.id}
+                className={`relative cursor-pointer border-2 rounded-lg overflow-hidden ${
+                  selectedImageId === img.id ? 'border-blue-500' : 'border-gray-300'
+                }`}
+                onClick={() => {
+                  setSelectedImageId(img.id);
+                  onSelectImage(img.url);
+                }}
+              >
+                <img
+                  src={img.url}
+                  alt={img.description}
+                  className="w-full h-32 object-cover"
+                />
+                {selectedImageId === img.id && (
+                  <div className="absolute top-2 right-2 bg-blue-500 text-white px-2 py-1 rounded text-xs">
+                    選択中
+                  </div>
+                )}
+                <div className="p-2 bg-white">
+                  <p className="text-xs text-gray-600 truncate">{img.description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* 参考画像ギャラリー */}
       <div className="mt-6">
-        <h3 className="text-lg font-medium mb-3">参考画像</h3>
-        <div className="grid grid-cols-3 gap-3 max-h-64 overflow-y-auto">
+        <h3 className="text-lg font-medium mb-3">参考画像ライブラリ</h3>
+        <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto">
           {referenceImages.map((img) => (
             <div
               key={img.id}
-              className="relative group cursor-pointer"
-              onClick={() => onSelectImage(img.url)}
+              className={`relative cursor-pointer border-2 rounded-lg overflow-hidden ${
+                selectedImageId === img.id ? 'border-blue-500' : 'border-transparent'
+              }`}
+              onClick={() => {
+                setSelectedImageId(img.id);
+                onSelectImage(img.url);
+              }}
             >
               <img
                 src={img.url}
                 alt={img.description}
-                className="w-full h-24 object-cover rounded-lg hover:opacity-80 transition-opacity"
+                className="w-full h-20 object-cover"
               />
-              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all rounded-lg flex items-center justify-center">
-                <span className="text-white opacity-0 group-hover:opacity-100 text-xs">
-                  選択
-                </span>
-              </div>
+              {selectedImageId === img.id && (
+                <div className="absolute inset-0 bg-blue-500 bg-opacity-20 flex items-center justify-center">
+                  <span className="text-white text-xs font-semibold bg-blue-500 px-2 py-1 rounded">
+                    選択中
+                  </span>
+                </div>
+              )}
             </div>
           ))}
         </div>
