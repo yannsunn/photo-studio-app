@@ -1,36 +1,122 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 写真館 着せ替えアプリ
 
-## Getting Started
+AIを使って服装を自由に変更できるWebアプリケーションです。
 
-First, run the development server:
+## 🌟 機能
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- **AI着せ替え合成** - 人物写真と服の画像を組み合わせて自然な着せ替えを実現
+- **参考画像生成** - 日本語プロンプトで服装の参考画像を生成
+- **画像ギャラリー** - 作成した画像の保存・管理
+- **クリップボード対応** - 画像の貼り付けに対応
+- **ローカル保存** - 最大50MBまでの画像データを保存
+
+## 🚀 デプロイ済みURL
+
+https://photo-studio-aiaejpgwv-yasuus-projects.vercel.app
+
+## 📋 必要な環境変数
+
+`.env.local` ファイルを作成し、以下の環境変数を設定してください：
+
+```env
+# Nano Banana (fal.ai) API Key
+FAL_KEY=your_fal_api_key_here
+
+# Next.js Configuration
+NEXT_PUBLIC_APP_URL=https://your-domain.vercel.app
+
+# Security (任意)
+API_SECRET_KEY=generate_a_random_secret_key_here
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🛠️ 開発環境のセットアップ
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. リポジトリをクローン
+```bash
+git clone https://github.com/yannsunn/photo-studio-app.git
+cd photo-studio-app
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+2. 依存関係をインストール
+```bash
+npm install
+```
 
-## Learn More
+3. 環境変数を設定
+```bash
+cp .env.local.example .env.local
+# .env.localファイルを編集してAPIキーを設定
+```
 
-To learn more about Next.js, take a look at the following resources:
+4. 開発サーバーを起動
+```bash
+npm run dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+http://localhost:3000 でアプリケーションにアクセスできます。
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 📦 ビルドとデプロイ
 
-## Deploy on Vercel
+### ローカルビルド
+```bash
+npm run build
+npm start
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Vercelへのデプロイ
+```bash
+vercel --prod
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🔧 技術スタック
+
+- **フレームワーク**: Next.js 15.5 (App Router)
+- **言語**: TypeScript
+- **スタイリング**: Tailwind CSS
+- **AI API**: Nano Banana (fal.ai)
+- **ストレージ**: LocalStorage (ブラウザ)
+- **デプロイ**: Vercel
+
+## 📝 使い方
+
+1. **新規作成タブ**
+   - 人物写真をアップロード（ドラッグ&ドロップ、ファイル選択、URL指定）
+   - 服の画像を選択（同上、または参考画像から選択）
+   - 「着せ替え実行」ボタンをクリック
+   - 結果を保存またはダウンロード
+
+2. **参考画像生成**
+   - カテゴリを選択（トップス、ボトムス、アクセサリー、靴）
+   - テンプレートまたは自由記述でプロンプトを入力
+   - 「参考画像を生成」をクリック
+
+3. **保存済み画像タブ**
+   - 過去に保存した画像の閲覧
+   - 画像の詳細表示
+   - ダウンロードまたは削除
+
+## ⚠️ 注意事項
+
+- 画像処理には10〜30秒かかる場合があります
+- アップロード画像は10MB以下にしてください
+- ローカルストレージの容量は最大50MBです
+- APIレート制限: 1分間に10リクエストまで
+
+## 🔒 セキュリティ
+
+- APIキーは環境変数で管理
+- レート制限実装
+- 入力値の検証とサニタイゼーション
+- CORS設定
+
+## 📄 ライセンス
+
+MIT
+
+## 👥 貢献
+
+プルリクエストを歓迎します。大きな変更の場合は、まずissueを開いて変更内容を議論してください。
+
+## 🐛 バグ報告
+
+[GitHub Issues](https://github.com/yannsunn/photo-studio-app/issues)でバグを報告してください。

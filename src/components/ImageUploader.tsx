@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
+import { ImageUploadHelper } from '@/lib/image-upload';
 
 interface ImageUploaderProps {
   label: string;
@@ -35,29 +36,21 @@ export default function ImageUploader({
   }, []);
 
   const handleFile = async (file: File) => {
-    if (!file.type.startsWith('image/')) {
-      alert('画像ファイルを選択してください');
-      return;
-    }
-
-    if (file.size > 10 * 1024 * 1024) {
-      alert('ファイルサイズは10MB以下にしてください');
+    // 画像検証を改善
+    const validation = ImageUploadHelper.validateImage(file);
+    if (!validation.valid) {
+      alert(validation.error);
       return;
     }
 
     setIsLoading(true);
 
     try {
-      // Create preview
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const url = e.target?.result as string;
-        setPreview(url);
-        // In production, upload to cloud storage and use that URL
-        // For demo, we'll use a placeholder URL
-        onImageSelect(url);
-      };
-      reader.readAsDataURL(file);
+      // 画像をリサイズして最適化
+      const resizedDataURL = await ImageUploadHelper.resizeImage(file, 1024, 1024, 0.9);
+
+      setPreview(resizedDataURL);
+      onImageSelect(resizedDataURL);
     } catch (error) {
       console.error('Error processing file:', error);
       alert('画像の処理に失敗しました');
