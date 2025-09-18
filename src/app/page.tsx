@@ -41,9 +41,9 @@ export default function Home() {
       if (data.images && data.images.length > 0) {
         setResultImage(data.images[0].url);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Synthesis error:', err);
-      setError(err.message || 'An error occurred during processing');
+      setError(err instanceof Error ? err.message : 'An error occurred during processing');
     } finally {
       setIsProcessing(false);
     }

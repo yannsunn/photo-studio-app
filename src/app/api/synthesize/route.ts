@@ -104,18 +104,20 @@ export async function POST(request: NextRequest) {
       timings: result.timings,
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('API error:', error);
 
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
     // Handle specific error types
-    if (error.message.includes('FAL_KEY')) {
+    if (errorMessage.includes('FAL_KEY')) {
       return NextResponse.json(
         { error: 'API configuration error' },
         { status: 500 }
       );
     }
 
-    if (error.message.includes('Rate limit')) {
+    if (errorMessage.includes('Rate limit')) {
       return NextResponse.json(
         { error: 'External API rate limit exceeded' },
         { status: 429 }
@@ -134,7 +136,7 @@ export async function POST(request: NextRequest) {
  * OPTIONS /api/synthesize
  * CORS preflight
  */
-export async function OPTIONS(request: NextRequest) {
+export async function OPTIONS() {
   return new NextResponse(null, {
     status: 200,
     headers: {

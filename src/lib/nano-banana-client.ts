@@ -126,8 +126,8 @@ export class NanoBananaClient {
 
         // Wait before next attempt
         await new Promise(resolve => setTimeout(resolve, interval));
-      } catch (error: any) {
-        if (error.response?.status !== 202) {
+      } catch (error: unknown) {
+        if (axios.isAxiosError(error) && error.response?.status !== 202) {
           throw error;
         }
       }
