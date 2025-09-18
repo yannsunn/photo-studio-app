@@ -140,6 +140,12 @@ export class NanoBananaClient {
    * URLの検証
    */
   static validateImageUrl(url: string): boolean {
+    // Data URLを許可
+    if (url.startsWith('data:image/')) {
+      return true;
+    }
+
+    // HTTP/HTTPS URLをチェック
     try {
       const urlObj = new URL(url);
       return ['http:', 'https:'].includes(urlObj.protocol);

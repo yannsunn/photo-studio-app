@@ -63,14 +63,19 @@ export default function ClothingGenerator({ onSelectImage }: ClothingGeneratorPr
 
       const data = await response.json();
       if (data.imageUrl) {
-        // setGeneratedImages(prev => [data.imageUrl, ...prev]);
-
         // 参考画像として保存
-        storage.addReferenceImage({
+        const newImage = storage.addReferenceImage({
           url: data.imageUrl,
           category: selectedCategory as 'tops' | 'bottoms' | 'accessories' | 'shoes' | 'bags' | 'other',
           description: customPrompt || CLOTHING_TEMPLATES[selectedCategory][0],
         });
+
+        // リストを更新
+        setReferenceImages(prev => [newImage, ...prev]);
+
+        // 自動的に選択
+        onSelectImage(data.imageUrl);
+        alert('参考画像を生成しました');
       }
     } catch (error) {
       console.error('画像生成エラー:', error);
