@@ -34,24 +34,6 @@ export default function ImageUploader({
     e.stopPropagation();
   }, []);
 
-  const handleDrop = useCallback(async (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-
-    const files = Array.from(e.dataTransfer.files);
-    if (files.length > 0 && files[0].type.startsWith('image/')) {
-      await handleFile(files[0]);
-    }
-  }, []);
-
-  const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files && files.length > 0) {
-      await handleFile(files[0]);
-    }
-  }, []);
-
   const handleFile = async (file: File) => {
     if (!file.type.startsWith('image/')) {
       alert('画像ファイルを選択してください');
@@ -83,6 +65,24 @@ export default function ImageUploader({
       setIsLoading(false);
     }
   };
+
+  const handleDrop = useCallback(async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0 && files[0].type.startsWith('image/')) {
+      await handleFile(files[0]);
+    }
+  }, [handleFile]);
+
+  const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      await handleFile(files[0]);
+    }
+  }, [handleFile]);
 
   const handleUrlInput = () => {
     const url = prompt('画像のURLを入力してください:');
