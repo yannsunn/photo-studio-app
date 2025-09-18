@@ -121,16 +121,16 @@ class StorageManager {
       },
       {
         id: 'ref-2',
-        url: 'https://images.unsplash.com/photo-1584370848010-d7fe7a451b1d?w=400',
+        url: 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=400',
         category: 'bottoms',
         description: 'デニムジーンズ',
         createdAt: new Date().toISOString(),
       },
       {
         id: 'ref-3',
-        url: 'https://images.unsplash.com/photo-1556656793-08538906a9f8?w=400',
+        url: 'https://images.unsplash.com/photo-1611078489935-0cb964d9c35a?w=400',
         category: 'accessories',
-        description: 'レザーバッグ',
+        description: 'アクセサリーセット',
         createdAt: new Date().toISOString(),
       },
     ];
