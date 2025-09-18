@@ -54,12 +54,12 @@ export default function ImageUploader({
 
   const handleFile = async (file: File) => {
     if (!file.type.startsWith('image/')) {
-      alert('Please select an image file');
+      alert('画像ファイルを選択してください');
       return;
     }
 
     if (file.size > 10 * 1024 * 1024) {
-      alert('File size must be less than 10MB');
+      alert('ファイルサイズは10MB以下にしてください');
       return;
     }
 
@@ -78,19 +78,19 @@ export default function ImageUploader({
       reader.readAsDataURL(file);
     } catch (error) {
       console.error('Error processing file:', error);
-      alert('Failed to process image');
+      alert('画像の処理に失敗しました');
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleUrlInput = () => {
-    const url = prompt('Enter image URL:');
+    const url = prompt('画像のURLを入力してください:');
     if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
       setPreview(url);
       onImageSelect(url);
     } else if (url) {
-      alert('Please enter a valid URL');
+      alert('有効なURLを入力してください');
     }
   };
 
@@ -124,7 +124,7 @@ export default function ImageUploader({
                 onImageSelect('');
               }}
               className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors"
-              aria-label="Remove image"
+              aria-label="画像を削除"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -141,7 +141,7 @@ export default function ImageUploader({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                 </svg>
                 <p className="mt-2 text-sm text-gray-600">
-                  Drag and drop an image here, or click to select
+                  ここに画像をドラッグ＆ドロップ、またはクリックして選択
                 </p>
                 <input
                   type="file"
@@ -154,13 +154,13 @@ export default function ImageUploader({
                   htmlFor={`file-input-${label}`}
                   className="mt-2 inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 cursor-pointer"
                 >
-                  Select File
+                  ファイル選択
                 </label>
                 <button
                   onClick={handleUrlInput}
                   className="ml-2 inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
                 >
-                  Use URL
+                  URLを使用
                 </button>
               </>
             )}

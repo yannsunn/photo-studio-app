@@ -38,7 +38,7 @@ export class NanoBananaClient {
   constructor(apiKey?: string) {
     const key = apiKey || process.env.FAL_KEY;
     if (!key) {
-      throw new Error('FAL_KEY is not configured');
+      throw new Error('FAL_KEYが設定されていません');
     }
     this.apiKey = key;
   }
@@ -93,7 +93,7 @@ export class NanoBananaClient {
       return await this.pollForResult(requestId);
     } catch (error) {
       console.error('Nano Banana API error:', error);
-      throw new Error('Failed to synthesize outfit');
+      throw new Error('服装合成に失敗しました');
     }
   }
 
@@ -121,7 +121,7 @@ export class NanoBananaClient {
         }
 
         if (response.data.status === 'FAILED') {
-          throw new Error('Processing failed: ' + response.data.error);
+          throw new Error('処理に失敗しました: ' + response.data.error);
         }
 
         // Wait before next attempt
@@ -133,7 +133,7 @@ export class NanoBananaClient {
       }
     }
 
-    throw new Error('Timeout waiting for result');
+    throw new Error('結果の待機中にタイムアウトしました');
   }
 
   /**

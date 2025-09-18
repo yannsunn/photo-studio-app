@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
     // Check rate limit
     if (!checkRateLimit(clientIp)) {
       return NextResponse.json(
-        { error: 'Rate limit exceeded. Please try again later.' },
+        { error: 'レート制限を超えました。後でもう一度お試しください。' },
         { status: 429 }
       );
     }
@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
     // Validation
     if (!personImageUrl || !garmentImageUrl) {
       return NextResponse.json(
-        { error: 'Both person and garment image URLs are required' },
+        { error: '人物と服の両方の画像URLが必要です' },
         { status: 400 }
       );
     }
@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
     if (!NanoBananaClient.validateImageUrl(personImageUrl) ||
         !NanoBananaClient.validateImageUrl(garmentImageUrl)) {
       return NextResponse.json(
-        { error: 'Invalid image URLs provided' },
+        { error: '無効な画像URLが提供されました' },
         { status: 400 }
       );
     }
@@ -112,21 +112,21 @@ export async function POST(request: NextRequest) {
     // Handle specific error types
     if (errorMessage.includes('FAL_KEY')) {
       return NextResponse.json(
-        { error: 'API configuration error' },
+        { error: 'API設定エラー' },
         { status: 500 }
       );
     }
 
     if (errorMessage.includes('Rate limit')) {
       return NextResponse.json(
-        { error: 'External API rate limit exceeded' },
+        { error: '外部APIのレート制限を超えました' },
         { status: 429 }
       );
     }
 
     // Generic error response
     return NextResponse.json(
-      { error: 'Failed to process request' },
+      { error: 'リクエストの処理に失敗しました' },
       { status: 500 }
     );
   }

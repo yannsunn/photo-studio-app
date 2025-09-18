@@ -12,7 +12,7 @@ export default function Home() {
 
   const handleSynthesize = async () => {
     if (!personImage || !garmentImage) {
-      setError('Please select both person and garment images');
+      setError('人物写真と服の画像を両方選択してください');
       return;
     }
 
@@ -126,7 +126,7 @@ export default function Home() {
                 <div className="relative bg-gray-100 rounded-lg p-4">
                   <img
                     src={resultImage}
-                    alt="Result"
+                    alt="結果"
                     className="w-full h-auto max-h-[600px] object-contain rounded"
                   />
                   <a
