@@ -32,6 +32,18 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.local.example
+
+# uploaded files
+/public/uploads
+/uploads
+
+# IDE
+.vscode/
+.idea/
+
+# OS files
+Thumbs.db
 
 # vercel
 .vercel
