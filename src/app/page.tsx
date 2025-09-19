@@ -14,6 +14,7 @@ export default function Home() {
   const [error, setError] = useState<string>('');
   const [activeTab, setActiveTab] = useState<'create' | 'gallery'>('create');
   const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [selectedApi, setSelectedApi] = useState<'nanoBanana' | 'seaDream'>('nanoBanana');
 
   const handleSynthesize = async () => {
     if (!personImage || !garmentImage) {
@@ -34,6 +35,7 @@ export default function Home() {
         body: JSON.stringify({
           personImageUrl: personImage,
           garmentImageUrl: garmentImage,
+          apiType: selectedApi,
         }),
       });
 
@@ -145,6 +147,42 @@ export default function Home() {
                           currentImage={garmentImage}
                         />
                       </div>
+                    </div>
+
+                    {/* API Selector */}
+                    <div className="mb-6">
+                      <label className="block text-sm font-medium text-gray-700 mb-2 text-center">
+                        使用するAIエンジン
+                      </label>
+                      <div className="flex justify-center gap-4">
+                        <button
+                          onClick={() => setSelectedApi('nanoBanana')}
+                          className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+                            selectedApi === 'nanoBanana'
+                              ? 'bg-purple-600 text-white'
+                              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                          }`}
+                        >
+                          Nano Banana
+                          <span className="text-xs ml-1">(高速)</span>
+                        </button>
+                        <button
+                          onClick={() => setSelectedApi('seaDream')}
+                          className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+                            selectedApi === 'seaDream'
+                              ? 'bg-teal-600 text-white'
+                              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                          }`}
+                        >
+                          SEA DREAM
+                          <span className="text-xs ml-1">(高品質)</span>
+                        </button>
+                      </div>
+                      <p className="text-xs text-gray-500 text-center mt-2">
+                        {selectedApi === 'nanoBanana'
+                          ? 'Nano Banana: 高速処理、多様なスタイルに対応'
+                          : 'SEA DREAM: 高品質な合成、リアルな仕上がり'}
+                      </p>
                     </div>
 
                     {/* Action Button */}

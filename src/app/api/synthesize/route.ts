@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { NanoBananaClient } from '@/lib/nano-banana-client';
+import { SeaDreamClient } from '@/lib/sea-dream-client';
 
 // Rate limiting store (in production, use Redis)
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
@@ -59,7 +60,7 @@ export async function POST(request: NextRequest) {
 
     // Parse request body
     const body = await request.json();
-    const { personImageUrl, garmentImageUrl, prompt } = body;
+    const { personImageUrl, garmentImageUrl, prompt, apiType = 'nanoBanana' } = body;
 
     // Validation
     if (!personImageUrl || !garmentImageUrl) {
@@ -83,26 +84,57 @@ export async function POST(request: NextRequest) {
       NanoBananaClient.sanitizePrompt(prompt) :
       undefined;
 
-    // Initialize client
-    const client = new NanoBananaClient();
+    let result;
+    let responseData;
 
-    // Execute synthesis
-    const result = await client.synthesizeOutfit(
-      personImageUrl,
-      garmentImageUrl,
-      {
-        prompt: sanitizedPrompt,
-        numImages: 1,
-        outputFormat: 'png',
-      }
-    );
+    // APIタイプに応じて処理を分岐
+    if (apiType === 'seaDream') {
+      // SEA DREAM APIを使用
+      const client = new SeaDreamClient();
+      result = await client.synthesizeOutfit(
+        personImageUrl,
+        garmentImageUrl,
+        {
+          category: 'tops', // TODO: カテゴリーを動的に設定
+        }
+      );
+
+      responseData = {
+        success: true,
+        images: [{
+          url: result.image,
+          content_type: 'image/png',
+          file_name: 'synthesized.png',
+          file_size: 0,
+          width: 512,
+          height: 512,
+        }],
+        timings: result.timings,
+        apiUsed: 'seaDream',
+      };
+    } else {
+      // Nano Banana APIを使用（デフォルト）
+      const client = new NanoBananaClient();
+      result = await client.synthesizeOutfit(
+        personImageUrl,
+        garmentImageUrl,
+        {
+          prompt: sanitizedPrompt,
+          numImages: 1,
+          outputFormat: 'png',
+        }
+      );
+
+      responseData = {
+        success: true,
+        images: result.images,
+        timings: result.timings,
+        apiUsed: 'nanoBanana',
+      };
+    }
 
     // Return success response
-    return NextResponse.json({
-      success: true,
-      images: result.images,
-      timings: result.timings,
-    });
+    return NextResponse.json(responseData);
 
   } catch (error: unknown) {
     console.error('API error:', error);
