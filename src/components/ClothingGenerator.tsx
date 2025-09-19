@@ -64,7 +64,7 @@ export default function ClothingGenerator({ onSelectImage }: ClothingGeneratorPr
 
       const data = await response.json();
       if (data.imageUrl) {
-        // 参考画像として保存
+        // 参考画像として保存（LocalStorageに永続化）
         const newImage = storage.addReferenceImage({
           url: data.imageUrl,
           category: selectedCategory as 'tops' | 'bottoms' | 'accessories' | 'shoes' | 'bags' | 'other',
@@ -74,8 +74,10 @@ export default function ClothingGenerator({ onSelectImage }: ClothingGeneratorPr
         // 生成された画像リストに追加
         setGeneratedImages(prev => [newImage, ...prev]);
 
-        // リストを更新
-        setReferenceImages(prev => [newImage, ...prev]);
+        // 全体のリストを再読み込み
+        loadReferenceImages();
+
+        alert(`参考画像を生成してライブラリに保存しました: ${newImage.description}`);
       }
     } catch (error) {
       console.error('画像生成エラー:', error);
@@ -87,10 +89,16 @@ export default function ClothingGenerator({ onSelectImage }: ClothingGeneratorPr
 
   const [referenceImages, setReferenceImages] = useState<ReferenceImage[]>([]);
 
-  useEffect(() => {
+  // 初回ロード時と生成時に参考画像を取得
+  const loadReferenceImages = () => {
     if (typeof window !== 'undefined') {
-      setReferenceImages(storage.getReferenceImages());
+      const images = storage.getReferenceImages();
+      setReferenceImages(images);
     }
+  };
+
+  useEffect(() => {
+    loadReferenceImages();
   }, []);
 
   return (
@@ -202,9 +210,34 @@ export default function ClothingGenerator({ onSelectImage }: ClothingGeneratorPr
 
       {/* 参考画像ギャラリー */}
       <div className="mt-6">
-        <h3 className="text-lg font-medium mb-3">参考画像ライブラリ</h3>
-        <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto">
-          {referenceImages.map((img) => (
+        <div className="flex justify-between items-center mb-3">
+          <h3 className="text-lg font-medium">参考画像ライブラリ ({referenceImages.length}件)</h3>
+          {referenceImages.length > 3 && (
+            <button
+              onClick={() => {
+                if (confirm('生成した画像をクリアしますか？（デフォルト画像は残ります）')) {
+                  // デフォルト画像のIDを保持
+                  const defaultIds = ['ref-1', 'ref-2', 'ref-3'];
+
+                  // LocalStorageをクリアして再設定
+                  localStorage.removeItem('photo_studio_reference_images');
+                  loadReferenceImages();
+                  setGeneratedImages([]);
+                }
+              }}
+              className="text-xs text-red-600 hover:text-red-800"
+            >
+              生成画像をクリア
+            </button>
+          )}
+        </div>
+        {referenceImages.length === 0 ? (
+          <p className="text-sm text-gray-500 text-center py-4">
+            参考画像がありません。上記のフォームから生成してください。
+          </p>
+        ) : (
+          <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto">
+            {referenceImages.map((img) => (
             <div
               key={img.id}
               className={`relative cursor-pointer border-2 rounded-lg overflow-hidden ${
@@ -228,8 +261,9 @@ export default function ClothingGenerator({ onSelectImage }: ClothingGeneratorPr
                 </div>
               )}
             </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
