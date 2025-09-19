@@ -5,36 +5,28 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
-// 白背景の服装画像URL（デモ用）
+// 白背景の服装画像URL（デモ用 - Unsplashから）
 const SAMPLE_IMAGES: Record<string, string[]> = {
   tops: [
-    'https://m.media-amazon.com/images/I/41TfJBsDD5L._AC_.jpg',
-    'https://m.media-amazon.com/images/I/51ZQFZwEpuL._AC_.jpg',
-    'https://m.media-amazon.com/images/I/41LxySi0YfL._AC_.jpg',
+    'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=400&fit=crop',
+    'https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=400&h=400&fit=crop',
+    'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=400&h=400&fit=crop',
   ],
   bottoms: [
-    'https://m.media-amazon.com/images/I/31fDhykXu5L._AC_.jpg',
-    'https://m.media-amazon.com/images/I/31SKpuJHsXL._AC_.jpg',
-    'https://m.media-amazon.com/images/I/41gPKRmXsGL._AC_.jpg',
+    'https://images.unsplash.com/photo-1542272604-787c3835535d?w=400&h=400&fit=crop',
+    'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=400&h=400&fit=crop',
+    'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=400&h=400&fit=crop',
   ],
   accessories: [
-    'https://m.media-amazon.com/images/I/41AcFt6UUSL._AC_.jpg',
-    'https://m.media-amazon.com/images/I/51ESppCQU4L._AC_.jpg',
-    'https://m.media-amazon.com/images/I/41vIhU3UbWL._AC_.jpg',
+    'https://images.unsplash.com/photo-1515248137880-45e105b710e0?w=400&h=400&fit=crop',
+    'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=400&h=400&fit=crop',
+    'https://images.unsplash.com/photo-1611652022419-a9419f74343d?w=400&h=400&fit=crop',
   ],
   shoes: [
-    'https://m.media-amazon.com/images/I/31HGCzHCQdL._AC_.jpg',
-    'https://m.media-amazon.com/images/I/41AeYjcCBaL._AC_.jpg',
-    'https://m.media-amazon.com/images/I/41dqJJHHp9L._AC_.jpg',
+    'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=400&fit=crop',
+    'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400&h=400&fit=crop',
+    'https://images.unsplash.com/photo-1460353581641-37baddab0fa2?w=400&h=400&fit=crop',
   ],
-};
-
-// プレースホルダー画像（白背景）を使用
-const PLACEHOLDER_IMAGES = {
-  tops: 'https://via.placeholder.com/400x400/FFFFFF/333333?text=トップス',
-  bottoms: 'https://via.placeholder.com/400x400/FFFFFF/333333?text=ボトムス',
-  accessories: 'https://via.placeholder.com/400x400/FFFFFF/333333?text=アクセサリー',
-  shoes: 'https://via.placeholder.com/400x400/FFFFFF/333333?text=靴',
 };
 
 export async function POST(request: NextRequest) {
@@ -63,12 +55,7 @@ export async function POST(request: NextRequest) {
     // デモ用：カテゴリに応じた画像を返す
     // 実際のプロダクションではAI生成APIを使用
     const images = SAMPLE_IMAGES[adjustedCategory] || SAMPLE_IMAGES.tops;
-
-    // ランダムに選択するか、プレースホルダーを使用
-    const usePlayceholder = Math.random() < 0.3; // 30%の確率でプレースホルダー
-    const imageUrl = usePlayceholder
-      ? PLACEHOLDER_IMAGES[adjustedCategory as keyof typeof PLACEHOLDER_IMAGES] || PLACEHOLDER_IMAGES.tops
-      : images[Math.floor(Math.random() * images.length)];
+    const imageUrl = images[Math.floor(Math.random() * images.length)];
 
     // 遅延を追加して生成処理をシミュレート
     await new Promise(resolve => setTimeout(resolve, 1000));

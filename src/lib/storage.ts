@@ -114,21 +114,21 @@ class StorageManager {
     return [
       {
         id: 'ref-1',
-        url: 'https://via.placeholder.com/400x400/FFFFFF/333333?text=白シャツ',
+        url: 'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=400&h=400&fit=crop',
         category: 'tops',
         description: 'クラシックな白シャツ',
         createdAt: new Date().toISOString(),
       },
       {
         id: 'ref-2',
-        url: 'https://via.placeholder.com/400x400/FFFFFF/333333?text=デニム',
+        url: 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=400&h=400&fit=crop',
         category: 'bottoms',
         description: 'デニムジーンズ',
         createdAt: new Date().toISOString(),
       },
       {
         id: 'ref-3',
-        url: 'https://via.placeholder.com/400x400/FFFFFF/333333?text=ネックレス',
+        url: 'https://images.unsplash.com/photo-1515248137880-45e105b710e0?w=400&h=400&fit=crop',
         category: 'accessories',
         description: 'ネックレス',
         createdAt: new Date().toISOString(),
