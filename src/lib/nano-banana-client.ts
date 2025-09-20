@@ -72,8 +72,10 @@ export class NanoBananaClient {
     };
 
     try {
-      console.log('NanoBanana: Submitting request to:', `${this.baseUrl}/nano-banana/edit`);
-      console.log('NanoBanana: Request body:', JSON.stringify(requestBody, null, 2));
+      if (process.env.NODE_ENV === 'development') {
+        console.log('NanoBanana: Submitting request to:', `${this.baseUrl}/nano-banana/edit`);
+        console.log('NanoBanana: Request body:', JSON.stringify(requestBody, null, 2));
+      }
 
       // Submit request
       const submitResponse = await axios.post(
@@ -87,8 +89,10 @@ export class NanoBananaClient {
         }
       );
 
-      console.log('NanoBanana: Submit response status:', submitResponse.status);
-      console.log('NanoBanana: Submit response data:', JSON.stringify(submitResponse.data, null, 2));
+      if (process.env.NODE_ENV === 'development') {
+        console.log('NanoBanana: Submit response status:', submitResponse.status);
+        console.log('NanoBanana: Submit response data:', JSON.stringify(submitResponse.data, null, 2));
+      }
 
       // If sync_mode is enabled, return immediately
       if (submitResponse.data.images) {

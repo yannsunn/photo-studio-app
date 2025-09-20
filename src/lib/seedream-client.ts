@@ -68,8 +68,10 @@ export class SeeDreamClient {
     };
 
     try {
-      console.log('SeeDream: Submitting request to:', this.baseUrl);
-      console.log('SeeDream: Request body:', JSON.stringify(requestBody, null, 2));
+      if (process.env.NODE_ENV === 'development') {
+        console.log('SeeDream: Submitting request to:', this.baseUrl);
+        console.log('SeeDream: Request body:', JSON.stringify(requestBody, null, 2));
+      }
 
       // SeeDream APIを呼び出し
       const response = await axios.post(
@@ -83,8 +85,10 @@ export class SeeDreamClient {
         }
       );
 
-      console.log('SeeDream: Response status:', response.status);
-      console.log('SeeDream: Response data:', JSON.stringify(response.data, null, 2));
+      if (process.env.NODE_ENV === 'development') {
+        console.log('SeeDream: Response status:', response.status);
+        console.log('SeeDream: Response data:', JSON.stringify(response.data, null, 2));
+      }
 
       // レスポンスを返す
       return response.data as SeeDreamResponse;
