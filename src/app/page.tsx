@@ -180,8 +180,8 @@ export default function Home() {
                       </div>
                       <p className="text-xs text-gray-500 text-center mt-2">
                         {selectedApi === 'nanoBanana'
-                          ? 'FASHN Virtual Try-On: 専門的な服装合成AI'
-                          : 'FASHN Virtual Try-On: 高品質モード'}
+                          ? 'Nano Banana (Gemini 2.5 Flash): Google最新の画像編集AI'
+                          : 'Nano Banana: 高品質モード（詳細な服装変更）'}
                       </p>
                     </div>
 

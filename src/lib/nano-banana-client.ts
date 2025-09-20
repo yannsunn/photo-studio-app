@@ -64,38 +64,31 @@ export class NanoBananaClient {
     `.trim();
 
     try {
-      // Submit request - Nano BananaはVirtual Try-Onではなく画像編集API
-      // FASHN Virtual Try-Onを使用するか、Nano Bananaの画像編集機能を使用
-      const useVirtualTryOn = true; // Virtual Try-Onを使用
+      // Nano Banana (Gemini 2.5 Flash Image) を使用した服装変更
+      // 人物画像と服の画像を組み合わせてプロンプトで指示
 
-      const endpoint = useVirtualTryOn
-        ? 'https://fal.run/fashn/tryon'  // FASHN Virtual Try-On API
-        : `${this.baseUrl}/nano-banana/edit`;  // Nano Banana画像編集API
+      // 服装変更用の詳細なプロンプトを作成
+      const clothingPrompt = `Replace the person's current clothing with the garment shown in the second image.
+        Keep the person's face, pose, body position and background exactly the same.
+        Make the new clothing fit naturally on the person's body with realistic wrinkles and shadows.
+        Ensure the clothing colors, patterns, and textures match the reference garment exactly.`;
 
-      const requestPayload = useVirtualTryOn
-        ? {
-            // FASHN Virtual Try-Onのパラメータ
-            model_image: personImageUrl,
-            garment_image: garmentImageUrl,
-            num_samples: 1,
-            guidance_scale: 7.5,
-            num_inference_steps: 50
-          }
-        : {
-            // Nano Banana画像編集のパラメータ
-            prompt: options.prompt || defaultPrompt,
-            image_url: personImageUrl,
-            mask_url: null,  // 服の部分をマスク
-            num_images: 1
-          };
+      const requestPayload = {
+        // Nano Bananaのパラメータ
+        prompt: options.prompt || clothingPrompt,
+        image_urls: [personImageUrl, garmentImageUrl],  // 人物と服の両方の画像を渡す
+        num_images: options.numImages || 1,
+        output_format: options.outputFormat || 'png',
+        sync_mode: false  // 非同期モードでポーリング
+      };
 
       if (process.env.NODE_ENV === 'development') {
-        console.log('API: Submitting request to:', endpoint);
-        console.log('API: Request body:', JSON.stringify(requestPayload, null, 2));
+        console.log('Nano Banana: Submitting request to:', 'https://fal.run/fal-ai/nano-banana/edit');
+        console.log('Nano Banana: Request body:', JSON.stringify(requestPayload, null, 2));
       }
 
       const submitResponse = await axios.post(
-        endpoint,
+        'https://fal.run/fal-ai/nano-banana/edit',
         requestPayload,
         {
           headers: {
