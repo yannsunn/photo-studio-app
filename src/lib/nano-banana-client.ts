@@ -73,14 +73,21 @@ export class NanoBananaClient {
 
     try {
       if (process.env.NODE_ENV === 'development') {
-        console.log('NanoBanana: Submitting request to:', `${this.baseUrl}/nano-banana/edit`);
-        console.log('NanoBanana: Request body:', JSON.stringify(requestBody, null, 2));
+        console.log('Virtual Try-On: Submitting request to:', 'https://fal.run/fal-ai/image-apps-v2/virtual-try-on');
+        console.log('Virtual Try-On: Request body:', JSON.stringify({
+          person_image_url: personImageUrl,
+          garment_image_url: garmentImageUrl
+        }, null, 2));
       }
 
-      // Submit request
+      // Submit request - Use the correct virtual try-on endpoint
       const submitResponse = await axios.post(
-        `${this.baseUrl}/nano-banana/edit`,
-        requestBody,
+        'https://fal.run/fal-ai/image-apps-v2/virtual-try-on',
+        {
+          person_image_url: personImageUrl,
+          garment_image_url: garmentImageUrl,
+          // Remove unsupported fields from original requestBody
+        },
         {
           headers: {
             'Authorization': `Key ${this.apiKey}`,
