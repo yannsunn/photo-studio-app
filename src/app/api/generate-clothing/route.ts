@@ -30,9 +30,13 @@ export async function POST(request: NextRequest) {
     }
 
     // 環境変数からAPIキーを取得
-    const apiKey = process.env.FAL_KEY;
+    const apiKey = process.env.FAL_KEY || process.env.NANO_BANANA_KEY;
     if (!apiKey) {
-      console.error('FAL_KEY not found in environment variables');
+      console.error('API key not found in environment variables');
+      console.error('Available env keys:', {
+        FAL_KEY: !!process.env.FAL_KEY,
+        NANO_BANANA_KEY: !!process.env.NANO_BANANA_KEY
+      });
       // APIキーが設定されていない場合はダミー画像を返す
       return NextResponse.json({
         success: true,

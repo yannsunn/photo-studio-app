@@ -44,11 +44,14 @@ function checkRateLimit(clientId: string): boolean {
  * 服装合成を実行
  */
 export async function POST(request: NextRequest) {
-  // Parse request body first (outside try to make apiType accessible in catch)
-  const body = await request.json();
-  const { personImageUrl, garmentImageUrl, prompt, apiType = 'nanoBanana', garmentCategory } = body;
+  let body: { personImageUrl?: string; garmentImageUrl?: string; prompt?: string; apiType?: string; garmentCategory?: string } = {};
+  let apiType = 'nanoBanana';
 
   try {
+    // Parse request body
+    body = await request.json();
+    apiType = body.apiType || 'nanoBanana';
+    const { personImageUrl, garmentImageUrl, prompt, garmentCategory } = body;
     // Get client IP for rate limiting
     const clientIp = request.headers.get('x-forwarded-for') ||
                      request.headers.get('x-real-ip') ||
@@ -113,7 +116,13 @@ export async function POST(request: NextRequest) {
       };
     } else {
       // Nano Banana APIを使用（デフォルト）
-      const client = new NanoBananaClient();
+      const apiKey = process.env.FAL_KEY || process.env.NANO_BANANA_KEY;
+      if (!apiKey) {
+        console.error('API key not found in environment variables');
+        throw new Error('API configuration error');
+      }
+
+      const client = new NanoBananaClient(apiKey);
       result = await client.synthesizeOutfit(
         personImageUrl,
         garmentImageUrl,
@@ -144,16 +153,23 @@ export async function POST(request: NextRequest) {
         name: error.name
       } : error,
       apiType,
-      personImageUrl: personImageUrl?.substring(0, 50),
-      garmentImageUrl: garmentImageUrl?.substring(0, 50)
+      personImageUrl: body?.personImageUrl?.substring(0, 50),
+      garmentImageUrl: body?.garmentImageUrl?.substring(0, 50),
+      envKeys: {
+        FAL_KEY: !!process.env.FAL_KEY,
+        NANO_BANANA_KEY: !!process.env.NANO_BANANA_KEY
+      }
     });
 
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
     // Handle specific error types
-    if (errorMessage.includes('FAL_KEY')) {
+    if (errorMessage.includes('FAL_KEY') || errorMessage.includes('API configuration')) {
       return NextResponse.json(
-        { error: 'API設定エラー' },
+        {
+          error: 'API設定エラー: 環境変数を確認してください',
+          details: process.env.NODE_ENV === 'development' ? errorMessage : undefined
+        },
         { status: 500 }
       );
     }
