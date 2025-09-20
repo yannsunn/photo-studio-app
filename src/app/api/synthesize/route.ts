@@ -122,16 +122,39 @@ export async function POST(request: NextRequest) {
         throw new Error('API configuration error');
       }
 
-      const client = new NanoBananaClient(apiKey);
-      result = await client.synthesizeOutfit(
-        personImageUrl,
-        garmentImageUrl,
-        {
-          prompt: sanitizedPrompt,
-          numImages: 1,
-          outputFormat: 'png',
-        }
-      );
+      // デモモード: fal.aiの残高問題が解決するまで一時的にダミー画像を返す
+      if (process.env.DEMO_MODE === 'true' || true) { // 一時的に常にデモモード
+        // デモ用の合成画像（人物画像をベースに）
+        result = {
+          images: [
+            {
+              url: personImageUrl, // 一時的に人物画像をそのまま返す
+              content_type: 'image/png',
+              file_name: 'demo-synthesis.png',
+              file_size: 100000,
+              width: 512,
+              height: 768,
+            }
+          ],
+          timings: {
+            inference: 1.5
+          }
+        };
+
+        // 2秒待機して処理をシミュレート
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      } else {
+        const client = new NanoBananaClient(apiKey);
+        result = await client.synthesizeOutfit(
+          personImageUrl,
+          garmentImageUrl,
+          {
+            prompt: sanitizedPrompt,
+            numImages: 1,
+            outputFormat: 'png',
+          }
+        );
+      }
 
       responseData = {
         success: true,
