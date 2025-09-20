@@ -180,8 +180,8 @@ export default function Home() {
                       </div>
                       <p className="text-xs text-gray-500 text-center mt-2">
                         {selectedApi === 'nanoBanana'
-                          ? 'Virtual Try-On: fal.aiの高速処理エンジン'
-                          : 'Virtual Try-On: 高品質モード（同一エンジン）'}
+                          ? 'FASHN Virtual Try-On: 専門的な服装合成AI'
+                          : 'FASHN Virtual Try-On: 高品質モード'}
                       </p>
                     </div>
 

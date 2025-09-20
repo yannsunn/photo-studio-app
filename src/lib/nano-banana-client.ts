@@ -73,21 +73,38 @@ export class NanoBananaClient {
 
     try {
       if (process.env.NODE_ENV === 'development') {
-        console.log('Virtual Try-On: Submitting request to:', 'https://fal.run/fal-ai/image-apps-v2/virtual-try-on');
-        console.log('Virtual Try-On: Request body:', JSON.stringify({
-          person_image_url: personImageUrl,
-          garment_image_url: garmentImageUrl
-        }, null, 2));
+        console.log('API: Submitting request to:', endpoint);
+        console.log('API: Request body:', JSON.stringify(requestPayload, null, 2));
       }
 
-      // Submit request - Use the correct virtual try-on endpoint
+      // Submit request - Nano BananaはVirtual Try-Onではなく画像編集API
+      // FASHN Virtual Try-Onを使用するか、Nano Bananaの画像編集機能を使用
+      const useVirtualTryOn = true; // Virtual Try-Onを使用
+
+      const endpoint = useVirtualTryOn
+        ? 'https://fal.run/fashn/tryon'  // FASHN Virtual Try-On API
+        : `${this.baseUrl}/nano-banana/edit`;  // Nano Banana画像編集API
+
+      const requestPayload = useVirtualTryOn
+        ? {
+            // FASHN Virtual Try-Onのパラメータ
+            model_image: personImageUrl,
+            garment_image: garmentImageUrl,
+            num_samples: 1,
+            guidance_scale: 7.5,
+            num_inference_steps: 50
+          }
+        : {
+            // Nano Banana画像編集のパラメータ
+            prompt: options.prompt || defaultPrompt,
+            image_url: personImageUrl,
+            mask_url: null,  // 服の部分をマスク
+            num_images: 1
+          };
+
       const submitResponse = await axios.post(
-        'https://fal.run/fal-ai/image-apps-v2/virtual-try-on',
-        {
-          person_image_url: personImageUrl,
-          garment_image_url: garmentImageUrl,
-          // Remove unsupported fields from original requestBody
-        },
+        endpoint,
+        requestPayload,
         {
           headers: {
             'Authorization': `Key ${this.apiKey}`,
