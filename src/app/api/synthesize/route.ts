@@ -193,16 +193,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generic error response - include more details
+    // Generic error response - include details only in development
+    const isDevelopment = process.env.NODE_ENV === 'development';
     return NextResponse.json(
       {
         error: 'リクエストの処理に失敗しました',
-        details: errorMessage, // 一時的に本番環境でもエラー詳細を表示
-        apiType,
-        envCheck: {
-          hasFalKey: !!process.env.FAL_KEY,
-          keyLength: process.env.FAL_KEY?.length || 0
-        }
+        details: isDevelopment ? errorMessage : undefined,
+        apiType
       },
       { status: 500 }
     );
