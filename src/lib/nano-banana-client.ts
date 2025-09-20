@@ -40,7 +40,8 @@ export class NanoBananaClient {
     if (!key) {
       throw new Error('FAL_KEYが設定されていません');
     }
-    this.apiKey = key;
+    // APIキーから改行や不正な文字を除去
+    this.apiKey = key.trim().replace(/[\r\n\t]/g, '');
   }
 
   /**
