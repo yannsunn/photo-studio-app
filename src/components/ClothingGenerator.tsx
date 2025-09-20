@@ -212,12 +212,12 @@ export default function ClothingGenerator({ onSelectImage }: ClothingGeneratorPr
       <div className="mt-6">
         <div className="flex justify-between items-center mb-3">
           <h3 className="text-lg font-medium">参考画像ライブラリ ({referenceImages.length}件)</h3>
-          {referenceImages.length > 3 && (
+          {referenceImages.length > 6 && (
             <button
               onClick={() => {
                 if (confirm('生成した画像をクリアしますか？（デフォルト画像は残ります）')) {
                   // デフォルト画像のIDを保持
-                  const defaultIds = ['ref-1', 'ref-2', 'ref-3'];
+                  const defaultIds = ['ref-1', 'ref-2', 'ref-3', 'ref-4', 'ref-5', 'ref-6'];
 
                   // LocalStorageをクリアして再設定
                   localStorage.removeItem('photo_studio_reference_images');
