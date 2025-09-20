@@ -14,7 +14,7 @@ export default function Home() {
   const [error, setError] = useState<string>('');
   const [activeTab, setActiveTab] = useState<'create' | 'gallery'>('create');
   const [showSaveDialog, setShowSaveDialog] = useState(false);
-  const [selectedApi, setSelectedApi] = useState<'nanoBanana' | 'seaDream'>('nanoBanana');
+  const [selectedApi, setSelectedApi] = useState<'nanoBanana' | 'seeDream'>('nanoBanana');
 
   const handleSynthesize = async () => {
     if (!personImage || !garmentImage) {
@@ -167,21 +167,21 @@ export default function Home() {
                           <span className="text-xs ml-1">(高速)</span>
                         </button>
                         <button
-                          onClick={() => setSelectedApi('seaDream')}
+                          onClick={() => setSelectedApi('seeDream')}
                           className={`px-6 py-2 rounded-lg font-medium transition-colors ${
-                            selectedApi === 'seaDream'
+                            selectedApi === 'seeDream'
                               ? 'bg-teal-600 text-white'
                               : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                           }`}
                         >
-                          SEA DREAM
-                          <span className="text-xs ml-1">(高品質)</span>
+                          SeeDream
+                          <span className="text-xs ml-1">(ByteDance)</span>
                         </button>
                       </div>
                       <p className="text-xs text-gray-500 text-center mt-2">
                         {selectedApi === 'nanoBanana'
                           ? 'Nano Banana: 高速処理、多様なスタイルに対応'
-                          : 'SEA DREAM: 高品質な合成、リアルな仕上がり'}
+                          : 'SeeDream (ByteDance): 最先端のAI技術、超高品質な仕上がり'}
                       </p>
                     </div>
 

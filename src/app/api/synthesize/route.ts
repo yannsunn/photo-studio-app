@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { NanoBananaClient } from '@/lib/nano-banana-client';
-import { SeaDreamClient } from '@/lib/sea-dream-client';
+import { SeeDreamClient } from '@/lib/seedream-client';
 
 // Rate limiting store (in production, use Redis)
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
 
     // Parse request body
     const body = await request.json();
-    const { personImageUrl, garmentImageUrl, prompt, apiType = 'nanoBanana' } = body;
+    const { personImageUrl, garmentImageUrl, prompt, apiType = 'nanoBanana', garmentCategory } = body;
 
     // Validation
     if (!personImageUrl || !garmentImageUrl) {
@@ -88,29 +88,28 @@ export async function POST(request: NextRequest) {
     let responseData;
 
     // APIタイプに応じて処理を分岐
-    if (apiType === 'seaDream') {
-      // SEA DREAM APIを使用
-      const client = new SeaDreamClient();
+    if (apiType === 'seeDream') {
+      // ByteDance SeeDream APIを使用
+      const client = new SeeDreamClient();
+
+      // 服のタイプを自動判定
+      const clothType = SeeDreamClient.detectClothType(garmentCategory || prompt);
+
       result = await client.synthesizeOutfit(
         personImageUrl,
         garmentImageUrl,
         {
-          category: 'tops', // TODO: カテゴリーを動的に設定
+          clothType,
+          numInferenceSteps: 30,
+          guidanceScale: 2.0,
         }
       );
 
       responseData = {
         success: true,
-        images: [{
-          url: result.image,
-          content_type: 'image/png',
-          file_name: 'synthesized.png',
-          file_size: 0,
-          width: 512,
-          height: 512,
-        }],
+        images: result.images,
         timings: result.timings,
-        apiUsed: 'seaDream',
+        apiUsed: 'seeDream',
       };
     } else {
       // Nano Banana APIを使用（デフォルト）
