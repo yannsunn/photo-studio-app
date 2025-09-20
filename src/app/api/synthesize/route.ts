@@ -90,30 +90,10 @@ export async function POST(request: NextRequest) {
     let result;
     let responseData;
 
-    // APIタイプに応じて処理を分岐
-    if (apiType === 'seeDream') {
-      // ByteDance SeeDream APIを使用
-      const client = new SeeDreamClient();
-
-      // 服のタイプを自動判定
-      const clothType = SeeDreamClient.detectClothType(garmentCategory || prompt);
-
-      result = await client.synthesizeOutfit(
-        personImageUrl,
-        garmentImageUrl,
-        {
-          clothType,
-          numInferenceSteps: 30,
-          guidanceScale: 2.0,
-        }
-      );
-
-      responseData = {
-        success: true,
-        images: result.images,
-        timings: result.timings,
-        apiUsed: 'seeDream',
-      };
+    // 両方のAPIタイプで同じVirtual Try-On APIを使用（SeeDreamは現在利用不可）
+    if (false && apiType === 'seeDream') {
+      // SeeDream APIは現在利用できないため、同じVirtual Try-On APIを使用
+      // 将来的に別のAPIが利用可能になったら、ここに実装を追加
     } else {
       // Nano Banana APIを使用（デフォルト）
       const apiKey = process.env.FAL_KEY || process.env.NANO_BANANA_KEY;

@@ -163,7 +163,7 @@ export default function Home() {
                               : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                           }`}
                         >
-                          Nano Banana
+                          標準モード
                           <span className="text-xs ml-1">(高速)</span>
                         </button>
                         <button
@@ -174,14 +174,14 @@ export default function Home() {
                               : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                           }`}
                         >
-                          SeeDream
-                          <span className="text-xs ml-1">(ByteDance)</span>
+                          高品質モード
+                          <span className="text-xs ml-1">(詳細)</span>
                         </button>
                       </div>
                       <p className="text-xs text-gray-500 text-center mt-2">
                         {selectedApi === 'nanoBanana'
-                          ? 'Nano Banana: 高速処理、多様なスタイルに対応'
-                          : 'SeeDream (ByteDance): 最先端のAI技術、超高品質な仕上がり'}
+                          ? 'Virtual Try-On: fal.aiの高速処理エンジン'
+                          : 'Virtual Try-On: 高品質モード（同一エンジン）'}
                       </p>
                     </div>
 
