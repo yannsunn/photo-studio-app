@@ -63,20 +63,7 @@ export class NanoBananaClient {
       Create a realistic and natural-looking result.
     `.trim();
 
-    const requestBody: NanoBananaRequest = {
-      prompt: options.prompt || defaultPrompt,
-      image_urls: [personImageUrl, garmentImageUrl],
-      num_images: options.numImages || 1,
-      output_format: options.outputFormat || 'png',
-      sync_mode: true, // Enable synchronous mode for immediate response
-    };
-
     try {
-      if (process.env.NODE_ENV === 'development') {
-        console.log('API: Submitting request to:', endpoint);
-        console.log('API: Request body:', JSON.stringify(requestPayload, null, 2));
-      }
-
       // Submit request - Nano BananaはVirtual Try-Onではなく画像編集API
       // FASHN Virtual Try-Onを使用するか、Nano Bananaの画像編集機能を使用
       const useVirtualTryOn = true; // Virtual Try-Onを使用
@@ -101,6 +88,11 @@ export class NanoBananaClient {
             mask_url: null,  // 服の部分をマスク
             num_images: 1
           };
+
+      if (process.env.NODE_ENV === 'development') {
+        console.log('API: Submitting request to:', endpoint);
+        console.log('API: Request body:', JSON.stringify(requestPayload, null, 2));
+      }
 
       const submitResponse = await axios.post(
         endpoint,
