@@ -114,23 +114,23 @@ class StorageManager {
     return [
       {
         id: 'ref-1',
-        url: 'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=400&h=400&fit=crop',
+        url: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==',
         category: 'tops',
-        description: 'クラシックな白シャツ',
+        description: '白シャツ（サンプル）',
         createdAt: new Date().toISOString(),
       },
       {
         id: 'ref-2',
-        url: 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=400&h=400&fit=crop',
+        url: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==',
         category: 'bottoms',
-        description: 'デニムジーンズ',
+        description: 'ジーンズ（サンプル）',
         createdAt: new Date().toISOString(),
       },
       {
         id: 'ref-3',
-        url: 'https://images.unsplash.com/photo-1515248137880-45e105b710e0?w=400&h=400&fit=crop',
+        url: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==',
         category: 'accessories',
-        description: 'ネックレス',
+        description: 'アクセサリー（サンプル）',
         createdAt: new Date().toISOString(),
       },
     ];

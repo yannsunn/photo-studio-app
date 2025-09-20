@@ -1,33 +1,20 @@
 /**
- * 服装画像生成APIエンドポイント（簡易版）
- * 実際の画像生成にはStable DiffusionなどのAPIが必要
+ * 服装画像生成APIエンドポイント
+ * fal.ai APIを使用して白背景の商品画像を生成
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 
-// 白背景の服装画像URL（デモ用 - Unsplashから）
-const SAMPLE_IMAGES: Record<string, string[]> = {
-  tops: [
-    'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=400&fit=crop',
-    'https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=400&h=400&fit=crop',
-    'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=400&h=400&fit=crop',
-  ],
-  bottoms: [
-    'https://images.unsplash.com/photo-1542272604-787c3835535d?w=400&h=400&fit=crop',
-    'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=400&h=400&fit=crop',
-    'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=400&h=400&fit=crop',
-  ],
-  accessories: [
-    'https://images.unsplash.com/photo-1515248137880-45e105b710e0?w=400&h=400&fit=crop',
-    'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=400&h=400&fit=crop',
-    'https://images.unsplash.com/photo-1611652022419-a9419f74343d?w=400&h=400&fit=crop',
-  ],
-  shoes: [
-    'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=400&fit=crop',
-    'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400&h=400&fit=crop',
-    'https://images.unsplash.com/photo-1460353581641-37baddab0fa2?w=400&h=400&fit=crop',
-  ],
+// カテゴリごとのプロンプトテンプレート
+const CATEGORY_PROMPTS: Record<string, string> = {
+  tops: 'a clean white shirt, product photo, white background, studio lighting, high quality, professional photography',
+  bottoms: 'blue denim jeans, product photo, white background, studio lighting, high quality, professional photography',
+  accessories: 'silver necklace jewelry, product photo, white background, studio lighting, high quality, professional photography',
+  shoes: 'white sneakers shoes, product photo, white background, studio lighting, high quality, professional photography',
 };
+
+// fal.aiエンドポイント
+const FAL_API_URL = 'https://fal.run/fal-ai/flux-lora';
 
 export async function POST(request: NextRequest) {
   try {
@@ -42,6 +29,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // 環境変数からAPIキーを取得
+    const apiKey = process.env.FAL_KEY;
+    if (!apiKey) {
+      console.error('FAL_KEY not found in environment variables');
+      // APIキーが設定されていない場合はダミー画像を返す
+      return NextResponse.json({
+        success: true,
+        imageUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgdmlld0JveD0iMCAwIDQwMCA0MDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iNDAwIiBmaWxsPSJ3aGl0ZSIvPgo8dGV4dCB4PSIyMDAiIHk9IjIwMCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjI0IiBmaWxsPSIjY2NjIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBhbGlnbm1lbnQtYmFzZWxpbmU9Im1pZGRsZSI+CiAgICBbUHJvZHVjdCBJbWFnZV0KPC90ZXh0Pgo8L3N2Zz4=',
+        prompt: prompt,
+        category: category,
+      });
+    }
+
     // カテゴリを確実に正しく処理
     let adjustedCategory = category;
 
@@ -52,13 +52,39 @@ export async function POST(request: NextRequest) {
       adjustedCategory = 'accessories'; // バッグもアクセサリーとして扱う
     }
 
-    // デモ用：カテゴリに応じた画像を返す
-    // 実際のプロダクションではAI生成APIを使用
-    const images = SAMPLE_IMAGES[adjustedCategory] || SAMPLE_IMAGES.tops;
-    const imageUrl = images[Math.floor(Math.random() * images.length)];
+    // プロンプトを生成（白背景の商品画像用）
+    const fullPrompt = `${prompt}, ${CATEGORY_PROMPTS[adjustedCategory] || CATEGORY_PROMPTS.tops}`;
 
-    // 遅延を追加して生成処理をシミュレート
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // fal.ai APIを呼び出し
+    const response = await fetch(FAL_API_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Key ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        prompt: fullPrompt,
+        image_size: 'square_hd',
+        num_images: 1,
+        num_inference_steps: 4,
+        guidance_scale: 3.5,
+        enable_safety_checker: true,
+      }),
+    });
+
+    if (!response.ok) {
+      console.error('fal.ai API error:', response.statusText);
+      throw new Error('画像生成APIでエラーが発生しました');
+    }
+
+    const data = await response.json();
+
+    // 生成された画像のURLを返す
+    const imageUrl = data.images?.[0]?.url || data.image;
+
+    if (!imageUrl) {
+      throw new Error('画像URLが取得できませんでした');
+    }
 
     return NextResponse.json({
       success: true,
