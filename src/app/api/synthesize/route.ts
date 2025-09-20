@@ -44,6 +44,10 @@ function checkRateLimit(clientId: string): boolean {
  * 服装合成を実行
  */
 export async function POST(request: NextRequest) {
+  // Parse request body first (outside try to make apiType accessible in catch)
+  const body = await request.json();
+  const { personImageUrl, garmentImageUrl, prompt, apiType = 'nanoBanana', garmentCategory } = body;
+
   try {
     // Get client IP for rate limiting
     const clientIp = request.headers.get('x-forwarded-for') ||
@@ -57,10 +61,6 @@ export async function POST(request: NextRequest) {
         { status: 429 }
       );
     }
-
-    // Parse request body
-    const body = await request.json();
-    const { personImageUrl, garmentImageUrl, prompt, apiType = 'nanoBanana', garmentCategory } = body;
 
     // Validation
     if (!personImageUrl || !garmentImageUrl) {
