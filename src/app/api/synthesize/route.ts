@@ -146,8 +146,8 @@ export async function POST(request: NextRequest) {
       } else {
         const client = new NanoBananaClient(apiKey);
         result = await client.synthesizeOutfit(
-          personImageUrl,
-          garmentImageUrl,
+          personImageUrl!,  // Type assertion since we validated it exists
+          garmentImageUrl!,  // Type assertion since we validated it exists
           {
             prompt: sanitizedPrompt,
             numImages: 1,
