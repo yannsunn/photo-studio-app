@@ -82,13 +82,16 @@ export class NanoBananaClient {
         sync_mode: false  // 非同期モードでポーリング
       };
 
+      // 正しいNano Banana Edit APIエンドポイントを使用
+      const apiEndpoint = 'https://fal.run/fal-ai/nano-banana/edit';
+
       if (process.env.NODE_ENV === 'development') {
-        console.log('Nano Banana: Submitting request to:', 'https://fal.run/fal-ai/nano-banana/edit');
+        console.log('Nano Banana: Submitting request to:', apiEndpoint);
         console.log('Nano Banana: Request body:', JSON.stringify(requestPayload, null, 2));
       }
 
       const submitResponse = await axios.post(
-        'https://fal.run/fal-ai/nano-banana/edit',
+        apiEndpoint,
         requestPayload,
         {
           headers: {
