@@ -216,9 +216,6 @@ export default function ClothingGenerator({ onSelectImage }: ClothingGeneratorPr
             <button
               onClick={() => {
                 if (confirm('生成した画像をクリアしますか？（デフォルト画像は残ります）')) {
-                  // デフォルト画像のIDを保持
-                  const defaultIds = ['ref-1', 'ref-2', 'ref-3', 'ref-4', 'ref-5', 'ref-6'];
-
                   // LocalStorageをクリアして再設定
                   localStorage.removeItem('photo_studio_reference_images');
                   loadReferenceImages();

@@ -35,7 +35,7 @@ export default function ImageUploader({
     e.stopPropagation();
   }, []);
 
-  const handleFile = async (file: File) => {
+  const handleFile = useCallback(async (file: File) => {
     // 画像検証を改善
     const validation = ImageUploadHelper.validateImage(file);
     if (!validation.valid) {
@@ -57,7 +57,7 @@ export default function ImageUploader({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [onImageSelect]);
 
   const handleDrop = useCallback(async (e: React.DragEvent) => {
     e.preventDefault();
