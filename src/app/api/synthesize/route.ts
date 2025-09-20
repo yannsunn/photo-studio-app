@@ -137,6 +137,16 @@ export async function POST(request: NextRequest) {
 
   } catch (error: unknown) {
     console.error('API error:', error);
+    console.error('Error details:', {
+      error: error instanceof Error ? {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      } : error,
+      apiType,
+      personImageUrl: personImageUrl?.substring(0, 50),
+      garmentImageUrl: garmentImageUrl?.substring(0, 50)
+    });
 
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
@@ -155,9 +165,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generic error response
+    // Generic error response - include more details in development
+    const isDevelopment = process.env.NODE_ENV === 'development';
     return NextResponse.json(
-      { error: 'リクエストの処理に失敗しました' },
+      {
+        error: 'リクエストの処理に失敗しました',
+        details: isDevelopment ? errorMessage : undefined,
+        apiType
+      },
       { status: 500 }
     );
   }
