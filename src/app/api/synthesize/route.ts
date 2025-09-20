@@ -147,8 +147,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(responseData);
 
   } catch (error: unknown) {
-    console.error('API error:', error);
-    console.error('Error details:', {
+    // 詳細なエラーロギング
+    const errorDetails = {
       error: error instanceof Error ? {
         message: error.message,
         stack: error.stack,
@@ -159,14 +159,19 @@ export async function POST(request: NextRequest) {
       garmentImageUrl: body?.garmentImageUrl?.substring(0, 50),
       envKeys: {
         FAL_KEY: !!process.env.FAL_KEY,
+        FAL_KEY_LENGTH: process.env.FAL_KEY?.length || 0,
         NANO_BANANA_KEY: !!process.env.NANO_BANANA_KEY
       },
       timestamp: new Date().toISOString(),
       requestHeaders: {
         'user-agent': request.headers.get('user-agent'),
         'content-type': request.headers.get('content-type')
-      }
-    });
+      },
+      nodeEnv: process.env.NODE_ENV
+    };
+
+    console.error('API error:', error);
+    console.error('Error details:', JSON.stringify(errorDetails, null, 2));
 
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
@@ -188,13 +193,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generic error response - include more details in development
-    const isDevelopment = process.env.NODE_ENV === 'development';
+    // Generic error response - include more details
     return NextResponse.json(
       {
         error: 'リクエストの処理に失敗しました',
-        details: isDevelopment ? errorMessage : undefined,
-        apiType
+        details: errorMessage, // 一時的に本番環境でもエラー詳細を表示
+        apiType,
+        envCheck: {
+          hasFalKey: !!process.env.FAL_KEY,
+          keyLength: process.env.FAL_KEY?.length || 0
+        }
       },
       { status: 500 }
     );
