@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
       }
 
       // デモモード: fal.aiの残高問題が解決するまで一時的にダミー画像を返す
-      if (process.env.DEMO_MODE === 'true' || true) { // 一時的に常にデモモード
+      if (process.env.DEMO_MODE === 'true') { // デモモード無効化
         // デモ用の合成画像（人物画像をベースに）
         result = {
           images: [
