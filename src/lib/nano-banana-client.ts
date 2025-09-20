@@ -68,9 +68,13 @@ export class NanoBananaClient {
       image_urls: [personImageUrl, garmentImageUrl],
       num_images: options.numImages || 1,
       output_format: options.outputFormat || 'png',
+      sync_mode: true, // Enable synchronous mode for immediate response
     };
 
     try {
+      console.log('NanoBanana: Submitting request to:', `${this.baseUrl}/nano-banana/edit`);
+      console.log('NanoBanana: Request body:', JSON.stringify(requestBody, null, 2));
+
       // Submit request
       const submitResponse = await axios.post(
         `${this.baseUrl}/nano-banana/edit`,
@@ -83,6 +87,9 @@ export class NanoBananaClient {
         }
       );
 
+      console.log('NanoBanana: Submit response status:', submitResponse.status);
+      console.log('NanoBanana: Submit response data:', JSON.stringify(submitResponse.data, null, 2));
+
       // If sync_mode is enabled, return immediately
       if (submitResponse.data.images) {
         return submitResponse.data as NanoBananaResponse;
@@ -93,7 +100,24 @@ export class NanoBananaClient {
       return await this.pollForResult(requestId);
     } catch (error) {
       console.error('Nano Banana API error:', error);
-      throw new Error('服装合成に失敗しました');
+      if (axios.isAxiosError(error)) {
+        console.error('NanoBanana: Response status:', error.response?.status);
+        console.error('NanoBanana: Response data:', error.response?.data);
+        console.error('NanoBanana: Request config:', {
+          url: error.config?.url,
+          method: error.config?.method,
+          headers: error.config?.headers
+        });
+
+        if (error.response?.status === 401) {
+          throw new Error('NanoBanana: APIキーが無効です');
+        } else if (error.response?.status === 404) {
+          throw new Error('NanoBanana: APIエンドポイントが見つかりません');
+        } else if (error.response?.status === 429) {
+          throw new Error('NanoBanana: レート制限に達しました');
+        }
+      }
+      throw new Error('服装合成に失敗しました: ' + (error instanceof Error ? error.message : 'Unknown error'));
     }
   }
 

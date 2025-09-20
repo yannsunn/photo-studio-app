@@ -158,6 +158,11 @@ export async function POST(request: NextRequest) {
       envKeys: {
         FAL_KEY: !!process.env.FAL_KEY,
         NANO_BANANA_KEY: !!process.env.NANO_BANANA_KEY
+      },
+      timestamp: new Date().toISOString(),
+      requestHeaders: {
+        'user-agent': request.headers.get('user-agent'),
+        'content-type': request.headers.get('content-type')
       }
     });
 

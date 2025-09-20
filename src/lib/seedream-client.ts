@@ -6,9 +6,8 @@
 import axios from 'axios';
 
 interface SeeDreamRequest {
-  model_image: string;      // 人物画像URL
-  cloth_image: string;      // 服の画像URL
-  cloth_type?: 'upper' | 'lower' | 'overall';  // 服のタイプ
+  prompt: string;           // 編集プロンプト
+  image_urls: string[];     // 画像URL配列 [人物, 服]
   num_inference_steps?: number;  // 推論ステップ数（品質）
   guidance_scale?: number;   // ガイダンススケール
   seed?: number;            // シード値
@@ -32,7 +31,7 @@ interface SeeDreamResponse {
 
 export class SeeDreamClient {
   private apiKey: string;
-  private baseUrl = 'https://fal.run/fal-ai/seedream';  // ByteDance SeeDream on fal.ai
+  private baseUrl = 'https://fal.run/fal-ai/bytedance/seedream/v4/edit';  // ByteDance SeeDream v4 on fal.ai
 
   constructor(apiKey?: string) {
     const key = apiKey || process.env.FAL_KEY;
@@ -55,16 +54,23 @@ export class SeeDreamClient {
       seed?: number;
     } = {}
   ): Promise<SeeDreamResponse> {
+    // Create prompt based on cloth type
+    const clothTypeText = options.clothType === 'overall' ? 'dress' :
+                         options.clothType === 'lower' ? 'pants/skirt' : 'top/shirt';
+    const prompt = `Dress the person in the first image with the ${clothTypeText} from the second image. Maintain natural fit and lighting.`;
+
     const requestBody: SeeDreamRequest = {
-      model_image: personImageUrl,
-      cloth_image: garmentImageUrl,
-      cloth_type: options.clothType || 'upper',
+      prompt,
+      image_urls: [personImageUrl, garmentImageUrl],
       num_inference_steps: options.numInferenceSteps || 30,
       guidance_scale: options.guidanceScale || 2.0,
       seed: options.seed,
     };
 
     try {
+      console.log('SeeDream: Submitting request to:', this.baseUrl);
+      console.log('SeeDream: Request body:', JSON.stringify(requestBody, null, 2));
+
       // SeeDream APIを呼び出し
       const response = await axios.post(
         this.baseUrl,
@@ -77,14 +83,27 @@ export class SeeDreamClient {
         }
       );
 
+      console.log('SeeDream: Response status:', response.status);
+      console.log('SeeDream: Response data:', JSON.stringify(response.data, null, 2));
+
       // レスポンスを返す
       return response.data as SeeDreamResponse;
     } catch (error) {
       console.error('SeeDream API error:', error);
 
       if (axios.isAxiosError(error)) {
+        console.error('SeeDream: Response status:', error.response?.status);
+        console.error('SeeDream: Response data:', error.response?.data);
+        console.error('SeeDream: Request config:', {
+          url: error.config?.url,
+          method: error.config?.method,
+          headers: error.config?.headers
+        });
+
         if (error.response?.status === 401) {
           throw new Error('SeeDream: APIキーが無効です');
+        } else if (error.response?.status === 404) {
+          throw new Error('SeeDream: APIエンドポイントが見つかりません');
         } else if (error.response?.status === 429) {
           throw new Error('SeeDream: レート制限に達しました');
         } else if (error.response?.data?.detail) {
@@ -92,7 +111,7 @@ export class SeeDreamClient {
         }
       }
 
-      throw new Error('SeeDream: 服装合成に失敗しました');
+      throw new Error('SeeDream: 服装合成に失敗しました: ' + (error instanceof Error ? error.message : 'Unknown error'));
     }
   }
 
