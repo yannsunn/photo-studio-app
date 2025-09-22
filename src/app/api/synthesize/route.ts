@@ -86,7 +86,9 @@ export async function POST(request: NextRequest) {
       NanoBananaClient.sanitizePrompt(prompt) :
       undefined;
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let result: any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let responseData: any;
 
     // 両方のAPIタイプで同じVirtual Try-On APIを使用（SeeDreamは現在利用不可）
