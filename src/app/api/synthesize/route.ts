@@ -86,8 +86,8 @@ export async function POST(request: NextRequest) {
       NanoBananaClient.sanitizePrompt(prompt) :
       undefined;
 
-    let result;
-    let responseData;
+    let result: any;
+    let responseData: any;
 
     // 両方のAPIタイプで同じVirtual Try-On APIを使用（SeeDreamは現在利用不可）
     if (false && apiType === 'seeDream') {
