@@ -5,13 +5,14 @@
 
 import axios from 'axios';
 
-interface NanoBananaRequest {
-  prompt: string;
-  image_urls: string[];
-  num_images?: number;
-  output_format?: 'jpeg' | 'png';
-  sync_mode?: boolean;
-}
+// NanoBananaRequest interface is used for type checking the request payload
+// interface NanoBananaRequest {
+//   prompt: string;
+//   image_urls: string[];
+//   num_images?: number;
+//   output_format?: 'jpeg' | 'png';
+//   sync_mode?: boolean;
+// }
 
 interface NanoBananaResponse {
   images: Array<{
@@ -56,13 +57,14 @@ export class NanoBananaClient {
       outputFormat?: 'jpeg' | 'png';
     } = {}
   ): Promise<NanoBananaResponse> {
-    const defaultPrompt = `
-      Combine the person in the first image with the clothing from the second image.
-      Maintain the original pose and body position.
-      Keep the original background unchanged.
-      Ensure the clothing fits naturally.
-      Create a realistic and natural-looking result.
-    `.trim();
+    // Default prompt is not used - using specific clothing prompt instead
+    // const defaultPrompt = `
+    //   Combine the person in the first image with the clothing from the second image.
+    //   Maintain the original pose and body position.
+    //   Keep the original background unchanged.
+    //   Ensure the clothing fits naturally.
+    //   Create a realistic and natural-looking result.
+    // `.trim();
 
     try {
       // Nano Banana (Gemini 2.5 Flash Image) を使用した服装変更

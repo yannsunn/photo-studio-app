@@ -29,8 +29,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 環境変数からAPIキーを取得
-    const apiKey = process.env.FAL_KEY || process.env.NANO_BANANA_KEY;
+    // 環境変数からAPIキーを取得（改行や不正な文字を除去）
+    const rawKey = process.env.FAL_KEY || process.env.NANO_BANANA_KEY;
+    const apiKey = rawKey?.trim().replace(/[\r\n\t]/g, '');
     if (!apiKey) {
       console.error('API key not found in environment variables');
       console.error('Available env keys:', {
@@ -99,8 +100,12 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Generate clothing error:', error);
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
+    });
     return NextResponse.json(
-      { error: '画像生成に失敗しました' },
+      { error: '画像生成に失敗しました', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }
