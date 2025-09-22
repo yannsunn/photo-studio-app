@@ -96,20 +96,17 @@ export async function POST(request: NextRequest) {
     } else {
       // Nano Banana APIを使用（デフォルト）
       const apiKey = process.env.FAL_KEY || process.env.NANO_BANANA_KEY;
-      if (!apiKey) {
-        console.error('API key not found in environment variables');
-        throw new Error('API configuration error');
-      }
 
+      // APIキーがない場合はデモモードで動作
       // デモモード: fal.aiの残高問題が解決するまで一時的にダミー画像を返す
-      if (process.env.DEMO_MODE === 'true') { // デモモード無効化
-        // デモ用の合成画像（人物画像をベースに）
+      if (!apiKey || process.env.DEMO_MODE === 'true') { // APIキーがない場合もデモモード
+        // デモ用の合成画像（実際のサンプル画像URL）
         result = {
           images: [
             {
-              url: personImageUrl, // 一時的に人物画像をそのまま返す
-              content_type: 'image/png',
-              file_name: 'demo-synthesis.png',
+              url: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=512&h=768&fit=crop', // デモ用のサンプル画像
+              content_type: 'image/jpeg',
+              file_name: 'demo-synthesis.jpg',
               file_size: 100000,
               width: 512,
               height: 768,
@@ -117,7 +114,8 @@ export async function POST(request: NextRequest) {
           ],
           timings: {
             inference: 1.5
-          }
+          },
+          demo: true // デモモードのフラグ
         };
 
         // 2秒待機して処理をシミュレート
@@ -140,6 +138,7 @@ export async function POST(request: NextRequest) {
         images: result.images,
         timings: result.timings,
         apiUsed: 'nanoBanana',
+        demo: result.demo || false,
       };
     }
 
