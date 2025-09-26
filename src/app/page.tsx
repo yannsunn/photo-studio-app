@@ -63,7 +63,7 @@ export default function Home() {
                   type: garment.type,
                   imageUrl: reader.result as string,
                 });
-                reader.readAsDataURL(garment.file);
+                reader.readAsDataURL(garment.file!); // Non-null assertion since we checked above
               });
             }
             return { type: garment.type, imageUrl: garment.imageUrl };
