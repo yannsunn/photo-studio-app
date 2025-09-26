@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { NanoBananaClient } from '@/lib/nano-banana-client';
 import { SeeDreamClient } from '@/lib/seedream-client';
 import { SeedreamApiClient } from '@/lib/seedream-api-client';
+import { AdvancedVirtualTryOn } from '@/lib/advanced-virtual-tryon';
 
 // Rate limiting store (in production, use Redis)
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
@@ -45,14 +46,14 @@ function checkRateLimit(clientId: string): boolean {
  * 服装合成を実行
  */
 export async function POST(request: NextRequest) {
-  let body: { personImageUrl?: string; garmentImageUrl?: string; prompt?: string; apiType?: string; garmentCategory?: string; replacementMode?: string; enhancements?: string[]; priority?: string } = {};
+  let body: { personImageUrl?: string; garmentImageUrl?: string; prompt?: string; apiType?: string; garmentCategory?: string; garmentType?: string; replacementMode?: string; enhancements?: string[]; priority?: string; preservePose?: boolean; poseData?: string } = {};
   let apiType = 'nanoBanana';
 
   try {
     // Parse request body
     body = await request.json();
     apiType = body.apiType || 'nanoBanana';
-    const { personImageUrl, garmentImageUrl, prompt, replacementMode, enhancements, priority } = body;
+    const { personImageUrl, garmentImageUrl, prompt, garmentType, replacementMode, enhancements, priority, preservePose, poseData } = body;
     // Get client IP for rate limiting
     const clientIp = request.headers.get('x-forwarded-for') ||
                      request.headers.get('x-real-ip') ||
@@ -186,15 +187,28 @@ export async function POST(request: NextRequest) {
       } else {
         // 高品質モード: より詳細なパラメータでNano Bananaを使用
         const client = new NanoBananaClient(apiKey);
-        const highQualityPrompt = replacementMode === 'overlay'
-          ? `Add the garment as a layer with ultra-realistic lighting, shadows, and fabric physics. Preserve every detail and texture.`
-          : `Replace clothing with photorealistic quality. Perfect fabric draping, accurate shadows, preserve all details of the garment.`;
+
+        // 高度な仮想試着オプションを構築
+        const tryOnOptions = {
+          personImageUrl: personImageUrl!,
+          garmentImageUrl: garmentImageUrl!,
+          garmentType: (garmentType || AdvancedVirtualTryOn.detectGarmentType(prompt)) as 'upper' | 'lower' | 'dress' | 'outer',
+          preservePose: preservePose !== false, // デフォルトtrue
+          preserveBackground: true,
+          maskRegion: garmentType === 'upper' ? 'upper_body' as const :
+                      garmentType === 'lower' ? 'lower_body' as const :
+                      'full_body' as const
+        };
+
+        // 高度なプロンプトを生成
+        const advancedPrompt = AdvancedVirtualTryOn.generatePrompt(tryOnOptions);
+        const highQualityPrompt = sanitizedPrompt || advancedPrompt;
 
         result = await client.synthesizeOutfit(
           personImageUrl!,
           garmentImageUrl!,
           {
-            prompt: sanitizedPrompt || highQualityPrompt,
+            prompt: highQualityPrompt,
             numImages: 1,
             outputFormat: 'png',
             replacementMode: replacementMode as 'replace' | 'overlay' || 'replace',
