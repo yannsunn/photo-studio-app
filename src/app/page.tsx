@@ -6,6 +6,7 @@ import ClothingGenerator from '@/components/ClothingGenerator';
 import SavedImagesGallery from '@/components/SavedImagesGallery';
 import DownloadOptionsModal from '@/components/DownloadOptionsModal';
 import PoseEditor from '@/components/PoseEditor';
+import BatchProcessor from '@/components/BatchProcessor';
 import { storage } from '@/lib/storage';
 
 export default function Home() {
@@ -15,7 +16,7 @@ export default function Home() {
   const [poseData, setPoseData] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string>('');
-  const [activeTab, setActiveTab] = useState<'create' | 'gallery'>('create');
+  const [activeTab, setActiveTab] = useState<'create' | 'gallery' | 'batch'>('create');
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [showDownloadModal, setShowDownloadModal] = useState(false);
   const [showPoseEditor, setShowPoseEditor] = useState(false);
@@ -128,7 +129,9 @@ export default function Home() {
               {/* Animated background */}
               <div
                 className={`absolute inset-y-1 rounded-full bg-gradient-to-r from-violet-600 to-cyan-600 shadow-lg transition-all duration-300 ease-out ${
-                  activeTab === 'create' ? 'w-[calc(50%-0.125rem)]' : 'w-[calc(50%-0.125rem)] translate-x-[calc(100%+0.25rem)]'
+                  activeTab === 'create' ? 'w-[calc(33.333%-0.125rem)]' :
+                  activeTab === 'gallery' ? 'w-[calc(33.333%-0.125rem)] translate-x-[calc(100%+0.25rem)]' :
+                  'w-[calc(33.333%-0.125rem)] translate-x-[calc(200%+0.5rem)]'
                 }`}
               />
 
@@ -161,6 +164,22 @@ export default function Home() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                   <span>ギャラリー</span>
+                </div>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('batch')}
+                className={`relative flex-1 px-6 py-2.5 sm:py-3 rounded-full font-semibold text-sm sm:text-base transition-colors duration-200 ${
+                  activeTab === 'batch'
+                    ? 'text-white'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                  </svg>
+                  <span>バッチ処理</span>
                 </div>
               </button>
             </div>
@@ -462,8 +481,10 @@ export default function Home() {
                 </div>
               </div>
             </>
-          ) : (
+          ) : activeTab === 'gallery' ? (
             <SavedImagesGallery />
+          ) : (
+            <BatchProcessor />
           )}
         </div>
 

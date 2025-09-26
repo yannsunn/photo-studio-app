@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { NanoBananaClient } from '@/lib/nano-banana-client';
 import { SeeDreamClient } from '@/lib/seedream-client';
+import { SeedreamApiClient } from '@/lib/seedream-api-client';
 
 // Rate limiting store (in production, use Redis)
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
@@ -44,14 +45,14 @@ function checkRateLimit(clientId: string): boolean {
  * 服装合成を実行
  */
 export async function POST(request: NextRequest) {
-  let body: { personImageUrl?: string; garmentImageUrl?: string; prompt?: string; apiType?: string; garmentCategory?: string; replacementMode?: string } = {};
+  let body: { personImageUrl?: string; garmentImageUrl?: string; prompt?: string; apiType?: string; garmentCategory?: string; replacementMode?: string; enhancements?: string[]; priority?: string } = {};
   let apiType = 'nanoBanana';
 
   try {
     // Parse request body
     body = await request.json();
     apiType = body.apiType || 'nanoBanana';
-    const { personImageUrl, garmentImageUrl, prompt, replacementMode } = body;
+    const { personImageUrl, garmentImageUrl, prompt, replacementMode, enhancements, priority } = body;
     // Get client IP for rate limiting
     const clientIp = request.headers.get('x-forwarded-for') ||
                      request.headers.get('x-real-ip') ||
@@ -100,9 +101,68 @@ export async function POST(request: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let responseData: any;
 
-    // 常に高品質モードを使用（APIコストは同じため）
-    // apiTypeパラメータは後方互換性のために残すが、常に高品質処理を実行
-    if (true) { // 常に高品質モード
+    // APIタイプに応じて処理を分岐
+    if (apiType === 'seedream') {
+      // Seedream APIを使用
+      const apiKey = process.env.SEEDREAM_API_KEY;
+
+      if (!apiKey || process.env.DEMO_MODE === 'true') {
+        // デモモード
+        result = {
+          success: true,
+          imageUrl: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=512&h=768&fit=crop',
+          processTime: 1.5,
+          cost: 0.036,
+          taskId: 'demo-task-' + Date.now(),
+          demo: true
+        };
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      } else {
+        const client = new SeedreamApiClient(apiKey);
+
+        // まず人物画像を処理
+        const processedPerson = await client.processImage({
+          imageUrl: personImageUrl!,
+          mode: 'standard',
+          enhancements: enhancements as Array<'colorCorrection' | 'edgeOptimization'> || [],
+          priority: priority as 'normal' | 'low' || 'normal',
+        });
+
+        // 次に服画像を処理して合成
+        result = await client.processImage({
+          imageUrl: garmentImageUrl!,
+          mode: 'standard',
+          enhancements: ['edgeOptimization'],
+          priority: priority as 'normal' | 'low' || 'normal',
+        });
+
+        // Seedream用のレスポンスを構築
+        result = {
+          images: [
+            {
+              url: result.imageUrl,
+              content_type: 'image/png',
+              file_name: 'seedream-synthesis.png',
+              file_size: 0,
+              width: 1024,
+              height: 1024,
+            }
+          ],
+          timings: { inference: result.processTime },
+          cost: result.cost,
+          taskId: result.taskId,
+        };
+      }
+
+      responseData = {
+        success: true,
+        images: result.images,
+        timings: result.timings,
+        cost: result.cost,
+        apiUsed: 'seedream',
+        demo: result.demo || false,
+      };
+    } else { // nanoBanana または高品質モード
       // 高品質モード: 同じAPIだが異なるパラメータを使用
       const apiKey = process.env.FAL_KEY || process.env.SEEDREAM_KEY;
 
@@ -146,7 +206,7 @@ export async function POST(request: NextRequest) {
         success: true,
         images: result.images,
         timings: result.timings,
-        apiUsed: 'highQuality',
+        apiUsed: apiType === 'seedream' ? 'seedream' : 'highQuality',
         demo: result.demo || false,
       };
     }
