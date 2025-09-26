@@ -111,9 +111,6 @@ export default function Home() {
                     バーチャルスタジオ
                   </h1>
                 </div>
-                <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 font-medium">
-                  AI服装チェンジャー
-                </p>
               </div>
 
             </div>
@@ -211,45 +208,6 @@ export default function Home() {
                       </div>
                     </div>
 
-                    {/* Modern AI Status Card */}
-                    <div className="mb-6">
-                      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-violet-500/10 via-purple-500/10 to-cyan-500/10 p-4 sm:p-5">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-violet-500/20 to-transparent rounded-full blur-3xl" />
-                        <div className="relative">
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center gap-3">
-                              <div className="relative">
-                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-600 to-cyan-600 flex items-center justify-center animate-pulse">
-                                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                  </svg>
-                                </div>
-                                <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
-                              </div>
-                              <div>
-                                <h3 className="text-sm font-bold text-slate-900 dark:text-white">AIエンジン状態</h3>
-                                <p className="text-xs text-slate-600 dark:text-slate-400">プレミアム画質モード</p>
-                              </div>
-                            </div>
-                            <div className="flex flex-col items-end">
-                              <span className="text-xs font-mono text-slate-500">~15s</span>
-                              <span className="text-xs text-slate-400">平均時間</span>
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-3 gap-3">
-                            <div className="text-center p-2 rounded-lg bg-white/50 dark:bg-slate-800/50 backdrop-blur">
-                              <div className="text-xs font-semibold text-slate-900 dark:text-white">99.9%</div>
-                              <div className="text-xs text-slate-500">精度</div>
-                            </div>
-                            <div className="text-center p-2 rounded-lg bg-white/50 dark:bg-slate-800/50 backdrop-blur">
-                              <div className="text-xs font-semibold text-slate-900 dark:text-white">Real</div>
-                              <div className="text-xs text-slate-500">物理</div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
 
                     {/* Modern Mode Selector with sliding animation */}
                     <div className="mb-6 sm:mb-8">
