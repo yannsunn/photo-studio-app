@@ -194,6 +194,83 @@ export class NanoBananaClient {
   }
 
   /**
+   * 自然言語による服装変更
+   */
+  async modifyWithNaturalLanguage(
+    personImageUrl: string,
+    languagePrompt: string,
+    options: {
+      numImages?: number;
+      outputFormat?: 'jpeg' | 'png';
+    } = {}
+  ): Promise<NanoBananaResponse> {
+    try {
+      // 自然言語の指示をプロンプトに変換
+      const modificationPrompt = `Modify the person's clothing in this image according to the following instructions: ${languagePrompt}
+        Keep the person's face, hair, pose, body position, and background exactly the same.
+        Only change the clothing according to the instructions.
+        Ensure the modifications look natural and realistic.
+        Maintain the photo-realistic quality of the image.`;
+
+      const requestPayload = {
+        prompt: modificationPrompt,
+        image_urls: [personImageUrl],  // 人物画像のみを使用
+        num_images: options.numImages || 1,
+        output_format: options.outputFormat || 'png',
+        sync_mode: false
+      };
+
+      // 正しいNano Banana Edit APIエンドポイントを使用
+      const apiEndpoint = 'https://fal.run/fal-ai/nano-banana/edit';
+
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Nano Banana (Natural Language): Submitting request to:', apiEndpoint);
+        console.log('Nano Banana (Natural Language): Request body:', JSON.stringify(requestPayload, null, 2));
+      }
+
+      const submitResponse = await axios.post(
+        apiEndpoint,
+        requestPayload,
+        {
+          headers: {
+            'Authorization': `Key ${this.apiKey}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (process.env.NODE_ENV === 'development') {
+        console.log('NanoBanana (Natural Language): Submit response status:', submitResponse.status);
+        console.log('NanoBanana (Natural Language): Submit response data:', JSON.stringify(submitResponse.data, null, 2));
+      }
+
+      // If sync_mode is enabled, return immediately
+      if (submitResponse.data.images) {
+        return submitResponse.data as NanoBananaResponse;
+      }
+
+      // Otherwise, poll for results
+      const requestId = submitResponse.data.request_id;
+      return await this.pollForResult(requestId);
+    } catch (error) {
+      console.error('Nano Banana API (Natural Language) error:', error);
+      if (axios.isAxiosError(error)) {
+        console.error('NanoBanana (Natural Language): Response status:', error.response?.status);
+        console.error('NanoBanana (Natural Language): Response data:', error.response?.data);
+
+        if (error.response?.status === 401) {
+          throw new Error('NanoBanana: APIキーが無効です');
+        } else if (error.response?.status === 404) {
+          throw new Error('NanoBanana: APIエンドポイントが見つかりません');
+        } else if (error.response?.status === 429) {
+          throw new Error('NanoBanana: レート制限に達しました');
+        }
+      }
+      throw new Error('自然言語による服装変更に失敗しました: ' + (error instanceof Error ? error.message : 'Unknown error'));
+    }
+  }
+
+  /**
    * URLの検証
    */
   static validateImageUrl(url: string): boolean {

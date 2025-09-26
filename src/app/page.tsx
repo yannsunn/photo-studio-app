@@ -9,6 +9,7 @@ import DownloadOptionsModal from '@/components/DownloadOptionsModal';
 import BatchProcessor from '@/components/BatchProcessor';
 import GarmentTypeSelector from '@/components/GarmentTypeSelector';
 import MultiGarmentSelector, { GarmentSelection } from '@/components/MultiGarmentSelector';
+import NaturalLanguageInput from '@/components/NaturalLanguageInput';
 import { storage } from '@/lib/storage';
 
 export default function Home() {
@@ -29,6 +30,10 @@ export default function Home() {
   const [preservePose, setPreservePose] = useState(true);
   const [useMultiGarment, setUseMultiGarment] = useState(false);
   const [multiGarments, setMultiGarments] = useState<GarmentSelection[]>([]);
+  const [useNaturalLanguage, setUseNaturalLanguage] = useState(false);
+  const [naturalLanguagePrompt, setNaturalLanguagePrompt] = useState('');
+  const [additionalPrompt, setAdditionalPrompt] = useState('');
+  const [showEditMode, setShowEditMode] = useState(false);
 
   const handleSynthesize = async () => {
     // 複数箇所モードのチェック
@@ -38,9 +43,17 @@ export default function Home() {
         return;
       }
     } else {
-      if (!personImage || !garmentImage) {
-        setError('人物写真と服の画像を両方選択してください');
-        return;
+      // 自然言語モードの場合は服画像不要
+      if (useNaturalLanguage) {
+        if (!personImage || !naturalLanguagePrompt) {
+          setError('人物写真と言語指示を入力してください');
+          return;
+        }
+      } else {
+        if (!personImage || !garmentImage) {
+          setError('人物写真と服の画像を両方選択してください');
+          return;
+        }
       }
     }
 
@@ -83,7 +96,7 @@ export default function Home() {
           }),
         });
       } else {
-        // 単一モードの処理（既存のコード）
+        // 単一モードの処理（自然言語対応）
         response = await fetch('/api/synthesize', {
           method: 'POST',
           headers: {
@@ -91,12 +104,14 @@ export default function Home() {
           },
           body: JSON.stringify({
             personImageUrl: personImage,
-            garmentImageUrl: garmentImage,
+            garmentImageUrl: useNaturalLanguage ? personImage : garmentImage, // 自然言語モードの場合は人物画像を再利用
             apiType: selectedApi,
             replacementMode,
             garmentType,
             preservePose,
             poseData: poseData, // ポーズデータを追加
+            prompt: useNaturalLanguage ? naturalLanguagePrompt : undefined, // 自然言語プロンプトを追加
+            useNaturalLanguageMode: useNaturalLanguage,
           }),
         });
       }
@@ -113,6 +128,48 @@ export default function Home() {
       }
     } catch (err: unknown) {
       console.error('Synthesis error:', err);
+      setError(err instanceof Error ? err.message : 'An error occurred during processing');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleAdditionalEdit = async () => {
+    if (!resultImage || !additionalPrompt) {
+      setError('追加指示を入力してください');
+      return;
+    }
+
+    setIsProcessing(true);
+    setError('');
+
+    try {
+      const response = await fetch('/api/synthesize', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          personImageUrl: resultImage, // 前回の結果を人物画像として使用
+          prompt: additionalPrompt,
+          apiType: selectedApi,
+          preservePose,
+          useNaturalLanguageMode: true,
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to process request');
+      }
+
+      if (data.images && data.images.length > 0) {
+        setResultImage(data.images[0].url);
+        setAdditionalPrompt(''); // 成功後にクリア
+        setShowEditMode(false); // 編集モードを閉じる
+      }
+    } catch (err: unknown) {
+      console.error('Additional edit error:', err);
       setError(err instanceof Error ? err.message : 'An error occurred during processing');
     } finally {
       setIsProcessing(false);
@@ -246,39 +303,58 @@ export default function Home() {
                 {/* Main Editor with modern card design */}
                 <div className="lg:col-span-2 order-2 lg:order-1">
                   <div className="backdrop-blur-lg bg-white/90 dark:bg-slate-900/90 rounded-2xl sm:rounded-3xl shadow-2xl p-4 sm:p-6 lg:p-8 border border-white/20">
-                    {/* Mode Toggle - Single vs Multi */}
+                    {/* Mode Toggle - Single vs Multi vs Natural Language */}
                     <div className="mb-6 p-1 bg-gray-100 dark:bg-gray-800 rounded-xl">
                       <div className="flex gap-2">
                         <button
-                          onClick={() => setUseMultiGarment(false)}
-                          className={`flex-1 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
-                            !useMultiGarment
+                          onClick={() => {
+                            setUseMultiGarment(false);
+                            setUseNaturalLanguage(false);
+                          }}
+                          className={`flex-1 px-3 py-2 rounded-lg font-medium text-sm transition-all ${
+                            !useMultiGarment && !useNaturalLanguage
                               ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-md'
                               : 'text-gray-600 dark:text-gray-400 hover:text-gray-800'
                           }`}
                         >
-                          単一変更
+                          画像で指定
                         </button>
                         <button
-                          onClick={() => setUseMultiGarment(true)}
-                          className={`flex-1 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
+                          onClick={() => {
+                            setUseMultiGarment(true);
+                            setUseNaturalLanguage(false);
+                          }}
+                          className={`flex-1 px-3 py-2 rounded-lg font-medium text-sm transition-all ${
                             useMultiGarment
+                              ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-md'
+                              : 'text-gray-600 dark:text-gray-400 hover:text-gray-800'
+                          }`}
+                        >
+                          複数箇所
+                        </button>
+                        <button
+                          onClick={() => {
+                            setUseMultiGarment(false);
+                            setUseNaturalLanguage(true);
+                          }}
+                          className={`flex-1 px-3 py-2 rounded-lg font-medium text-sm transition-all ${
+                            useNaturalLanguage
                               ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-md'
                               : 'text-gray-600 dark:text-gray-400 hover:text-gray-800'
                           }`}
                         >
                           <span className="flex items-center justify-center gap-2">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                             </svg>
-                            複数箇所
+                            言語指示
                           </span>
                         </button>
                       </div>
                     </div>
 
                     {/* Modern Image Upload Grid - Conditional based on mode */}
-                    {!useMultiGarment ? (
+                    {!useMultiGarment && !useNaturalLanguage ? (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
                         {/* Person Image Upload with modern styling */}
                         <div className="group">
@@ -313,6 +389,30 @@ export default function Home() {
                             currentImage={garmentImage}
                           />
                         </div>
+                      </div>
+                    ) : useNaturalLanguage ? (
+                      <div className="mb-6">
+                        {/* Person Image for Natural Language Mode */}
+                        <div className="mb-4">
+                          <div className="mb-2 flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-violet-600 flex items-center justify-center">
+                              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                              </svg>
+                            </div>
+                            <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">人物写真</span>
+                          </div>
+                          <ImageUploader
+                            label=""
+                            onImageSelect={setPersonImage}
+                            currentImage={personImage}
+                          />
+                        </div>
+
+                        {/* Natural Language Input */}
+                        <NaturalLanguageInput
+                          onPromptChange={setNaturalLanguagePrompt}
+                        />
                       </div>
                     ) : (
                       <div className="mb-6">
@@ -455,15 +555,15 @@ export default function Home() {
                     <div className="flex justify-center mb-6 sm:mb-8">
                       <button
                         onClick={handleSynthesize}
-                        disabled={isProcessing || !personImage || !garmentImage}
+                        disabled={isProcessing || !personImage || (!useMultiGarment && !useNaturalLanguage && !garmentImage) || (useMultiGarment && multiGarments.length === 0) || (useNaturalLanguage && !naturalLanguagePrompt)}
                         className={`group relative px-8 sm:px-12 py-3 sm:py-4 rounded-2xl font-bold text-white transition-all duration-300 transform ${
-                          isProcessing || !personImage || !garmentImage
+                          isProcessing || !personImage || (!useMultiGarment && !useNaturalLanguage && !garmentImage) || (useMultiGarment && multiGarments.length === 0) || (useNaturalLanguage && !naturalLanguagePrompt)
                             ? 'bg-slate-400 dark:bg-slate-600 cursor-not-allowed opacity-60'
                             : 'bg-gradient-to-r from-violet-600 to-cyan-600 hover:shadow-2xl hover:shadow-violet-500/25 hover:scale-105 active:scale-100'
                         }`}
                       >
                         {/* Button glow effect */}
-                        {!(isProcessing || !personImage || !garmentImage) && (
+                        {!(isProcessing || !personImage || (!useMultiGarment && !useNaturalLanguage && !garmentImage) || (useMultiGarment && multiGarments.length === 0) || (useNaturalLanguage && !naturalLanguagePrompt)) && (
                           <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-violet-600 to-cyan-600 blur-lg opacity-50 group-hover:opacity-75 transition-opacity" />
                         )}
 
@@ -515,6 +615,41 @@ export default function Home() {
                           </div>
                         </div>
 
+                        {/* Action buttons bar - Always visible */}
+                        <div className="flex gap-2 mb-4">
+                          <button
+                            onClick={() => setShowEditMode(!showEditMode)}
+                            className={`flex-1 px-4 py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
+                              showEditMode
+                                ? 'bg-purple-700 text-white shadow-lg'
+                                : 'bg-purple-600 text-white hover:bg-purple-700 hover:shadow-lg'
+                            }`}
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                            <span>追加編集</span>
+                          </button>
+                          <button
+                            onClick={() => setShowSaveDialog(true)}
+                            className="flex-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-4 py-2.5 rounded-xl font-semibold text-sm hover:bg-slate-200 dark:hover:bg-slate-700 transition-all flex items-center justify-center gap-2"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V2" />
+                            </svg>
+                            <span>保存</span>
+                          </button>
+                          <button
+                            onClick={() => setShowDownloadModal(true)}
+                            className="flex-1 bg-gradient-to-r from-violet-600 to-cyan-600 text-white px-4 py-2.5 rounded-xl font-semibold text-sm hover:shadow-xl hover:shadow-violet-500/25 transition-all flex items-center justify-center gap-2"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                            <span>エクスポート</span>
+                          </button>
+                        </div>
+
                         <div className="relative group">
                           {/* Modern image container with hover effects */}
                           <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 p-2 sm:p-3">
@@ -524,45 +659,52 @@ export default function Home() {
                               className="w-full h-auto max-h-[600px] object-contain rounded-xl transition-transform duration-500 group-hover:scale-[1.02]"
                             />
 
-                            {/* Floating action buttons with glassmorphism */}
-                            <div className="absolute top-3 right-3 sm:top-4 sm:right-4 flex flex-col sm:flex-row gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                              <button
-                                onClick={() => setShowSaveDialog(true)}
-                                className="backdrop-blur-lg bg-white/90 dark:bg-slate-900/90 text-slate-700 dark:text-slate-300 px-3 sm:px-4 py-2 rounded-xl hover:bg-white dark:hover:bg-slate-900 transition-all duration-200 flex items-center gap-2 shadow-lg border border-white/20"
-                              >
-                                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V2" />
-                                </svg>
-                                <span className="text-sm font-medium">保存</span>
-                              </button>
+                          </div>
 
-                              <button
-                                onClick={() => setShowDownloadModal(true)}
-                                className="backdrop-blur-lg bg-gradient-to-r from-violet-600 to-cyan-600 text-white px-3 sm:px-4 py-2 rounded-xl hover:shadow-xl hover:shadow-violet-500/25 transition-all duration-200 flex items-center gap-2 shadow-lg"
-                              >
-                                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                          {/* 追加編集モード */}
+                          {showEditMode && (
+                            <div className="mt-4 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl animate-fade-in">
+                              <div className="flex items-center gap-2 mb-3">
+                                <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                 </svg>
-                                <span className="text-sm font-medium">エクスポート</span>
-                              </button>
+                                <span className="text-sm font-semibold text-purple-700 dark:text-purple-300">追加指示を入力</span>
+                              </div>
+
+                              <div className="flex gap-2">
+                                <textarea
+                                  value={additionalPrompt}
+                                  onChange={(e) => setAdditionalPrompt(e.target.value)}
+                                  placeholder="例：帽子を追加、色を赤に変更、アクセサリーを追加..."
+                                  className="flex-1 px-3 py-2 border-2 border-purple-200 rounded-xl focus:border-purple-400 focus:outline-none resize-none text-sm"
+                                  rows={2}
+                                  disabled={isProcessing}
+                                />
+                                <button
+                                  onClick={handleAdditionalEdit}
+                                  disabled={isProcessing || !additionalPrompt}
+                                  className={`px-4 py-2 rounded-xl font-semibold text-sm transition-all ${
+                                    isProcessing || !additionalPrompt
+                                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                      : 'bg-purple-600 text-white hover:bg-purple-700 hover:shadow-lg'
+                                  }`}
+                                >
+                                  {isProcessing ? (
+                                    <div className="flex items-center gap-2">
+                                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                                      <span>処理中...</span>
+                                    </div>
+                                  ) : (
+                                    '適用'
+                                  )}
+                                </button>
+                              </div>
+
+                              <div className="mt-2 text-xs text-purple-600 dark:text-purple-400">
+                                <p>💡 ヒント: 「赤い帽子を追加」「背景をぼかす」「ネクタイの色を青に」など具体的な指示を入力してください</p>
+                              </div>
                             </div>
-                          </div>
-
-                          {/* Quick actions bar for mobile */}
-                          <div className="flex gap-2 mt-3 sm:hidden">
-                            <button
-                              onClick={() => setShowSaveDialog(true)}
-                              className="flex-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-xl font-medium text-sm"
-                            >
-                              保存
-                            </button>
-                            <button
-                              onClick={() => setShowDownloadModal(true)}
-                              className="flex-1 bg-gradient-to-r from-violet-600 to-cyan-600 text-white px-4 py-2 rounded-xl font-medium text-sm"
-                            >
-                              ダウンロード
-                            </button>
-                          </div>
+                          )}
                         </div>
                       </div>
                     )}

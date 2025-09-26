@@ -17,6 +17,7 @@ export default function ImageUploader({
   const [isDragging, setIsDragging] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [preview, setPreview] = useState<string>(currentImage || '');
+  const [uniqueId] = useState(() => Math.random().toString(36).substr(2, 9));
 
   const handleDragEnter = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -192,12 +193,12 @@ export default function ImageUploader({
                       accept="image/*"
                       onChange={handleFileSelect}
                       className="hidden"
-                      id={`file-input-${label || 'image'}`}
+                      id={`file-input-${uniqueId}`}
                     />
 
                     <div className="flex flex-col sm:flex-row gap-2 justify-center">
                       <label
-                        htmlFor={`file-input-${label || 'image'}`}
+                        htmlFor={`file-input-${uniqueId}`}
                         className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-sm font-medium hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer transition-colors"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

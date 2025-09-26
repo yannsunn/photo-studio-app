@@ -46,14 +46,14 @@ function checkRateLimit(clientId: string): boolean {
  * 服装合成を実行
  */
 export async function POST(request: NextRequest) {
-  let body: { personImageUrl?: string; garmentImageUrl?: string; prompt?: string; apiType?: string; garmentCategory?: string; garmentType?: string; replacementMode?: string; enhancements?: string[]; priority?: string; preservePose?: boolean; poseData?: string } = {};
+  let body: { personImageUrl?: string; garmentImageUrl?: string; prompt?: string; apiType?: string; garmentCategory?: string; garmentType?: string; replacementMode?: string; enhancements?: string[]; priority?: string; preservePose?: boolean; poseData?: string; useNaturalLanguageMode?: boolean } = {};
   let apiType = 'nanoBanana';
 
   try {
     // Parse request body
     body = await request.json();
     apiType = body.apiType || 'nanoBanana';
-    const { personImageUrl, garmentImageUrl, prompt, garmentType, replacementMode, enhancements, priority, preservePose } = body;
+    const { personImageUrl, garmentImageUrl, prompt, garmentType, replacementMode, enhancements, priority, preservePose, useNaturalLanguageMode } = body;
     // poseData is reserved for future use
     // Get client IP for rate limiting
     const clientIp = request.headers.get('x-forwarded-for') ||
@@ -69,16 +69,32 @@ export async function POST(request: NextRequest) {
     }
 
     // Validation
-    if (!personImageUrl || !garmentImageUrl) {
+    if (!personImageUrl) {
       return NextResponse.json(
-        { error: '人物と服の両方の画像URLが必要です' },
+        { error: '人物の画像URLが必要です' },
+        { status: 400 }
+      );
+    }
+
+    // 自然言語モードの場合、服の画像は不要、プロンプトが必要
+    if (useNaturalLanguageMode && !prompt) {
+      return NextResponse.json(
+        { error: '自然言語の指示が必要です' },
+        { status: 400 }
+      );
+    }
+
+    // 通常モードの場合、服の画像が必要
+    if (!useNaturalLanguageMode && !garmentImageUrl) {
+      return NextResponse.json(
+        { error: '服の画像URLが必要です' },
         { status: 400 }
       );
     }
 
     // Validate URLs with detailed error messages
     const personUrlValid = NanoBananaClient.validateImageUrl(personImageUrl);
-    const garmentUrlValid = NanoBananaClient.validateImageUrl(garmentImageUrl);
+    const garmentUrlValid = !useNaturalLanguageMode ? NanoBananaClient.validateImageUrl(garmentImageUrl!) : true;
 
     if (!personUrlValid || !garmentUrlValid) {
       console.error('URL validation failed:', {
@@ -186,35 +202,46 @@ export async function POST(request: NextRequest) {
         };
         await new Promise(resolve => setTimeout(resolve, 3000));
       } else {
-        // 高品質モード: より詳細なパラメータでNano Bananaを使用
         const client = new NanoBananaClient(apiKey);
 
-        // 高度な仮想試着オプションを構築
-        const tryOnOptions = {
-          personImageUrl: personImageUrl!,
-          garmentImageUrl: garmentImageUrl!,
-          garmentType: (garmentType || AdvancedVirtualTryOn.detectGarmentType(prompt)) as 'upper' | 'lower' | 'dress' | 'outer',
-          preservePose: preservePose !== false, // デフォルトtrue
-          preserveBackground: true,
-          maskRegion: garmentType === 'upper' ? 'upper_body' as const :
-                      garmentType === 'lower' ? 'lower_body' as const :
-                      'full_body' as const
-        };
+        if (useNaturalLanguageMode) {
+          // 自然言語モード: テキストの指示で服装を変更
+          result = await client.modifyWithNaturalLanguage(
+            personImageUrl!,
+            sanitizedPrompt!,
+            {
+              numImages: 1,
+              outputFormat: 'png',
+            }
+          );
+        } else {
+          // 通常モード: 高度な仮想試着オプションを構築
+          const tryOnOptions = {
+            personImageUrl: personImageUrl!,
+            garmentImageUrl: garmentImageUrl!,
+            garmentType: (garmentType || AdvancedVirtualTryOn.detectGarmentType(prompt)) as 'upper' | 'lower' | 'dress' | 'outer',
+            preservePose: preservePose !== false, // デフォルトtrue
+            preserveBackground: true,
+            maskRegion: garmentType === 'upper' ? 'upper_body' as const :
+                        garmentType === 'lower' ? 'lower_body' as const :
+                        'full_body' as const
+          };
 
-        // 高度なプロンプトを生成
-        const advancedPrompt = AdvancedVirtualTryOn.generatePrompt(tryOnOptions);
-        const highQualityPrompt = sanitizedPrompt || advancedPrompt;
+          // 高度なプロンプトを生成
+          const advancedPrompt = AdvancedVirtualTryOn.generatePrompt(tryOnOptions);
+          const highQualityPrompt = sanitizedPrompt || advancedPrompt;
 
-        result = await client.synthesizeOutfit(
-          personImageUrl!,
-          garmentImageUrl!,
-          {
-            prompt: highQualityPrompt,
-            numImages: 1,
-            outputFormat: 'png',
-            replacementMode: replacementMode as 'replace' | 'overlay' || 'replace',
-          }
-        );
+          result = await client.synthesizeOutfit(
+            personImageUrl!,
+            garmentImageUrl!,
+            {
+              prompt: highQualityPrompt,
+              numImages: 1,
+              outputFormat: 'png',
+              replacementMode: replacementMode as 'replace' | 'overlay' || 'replace',
+            }
+          );
+        }
       }
 
       responseData = {
