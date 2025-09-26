@@ -8,6 +8,7 @@ import DownloadOptionsModal from '@/components/DownloadOptionsModal';
 import PoseEditor from '@/components/PoseEditor';
 import BatchProcessor from '@/components/BatchProcessor';
 import GarmentTypeSelector from '@/components/GarmentTypeSelector';
+import MultiGarmentSelector, { GarmentSelection } from '@/components/MultiGarmentSelector';
 import { storage } from '@/lib/storage';
 
 export default function Home() {
@@ -26,11 +27,21 @@ export default function Home() {
   const [replacementMode, setReplacementMode] = useState<'replace' | 'overlay'>('replace');
   const [garmentType, setGarmentType] = useState<'upper' | 'lower' | 'dress' | 'outer'>('upper');
   const [preservePose, setPreservePose] = useState(true);
+  const [useMultiGarment, setUseMultiGarment] = useState(false);
+  const [multiGarments, setMultiGarments] = useState<GarmentSelection[]>([]);
 
   const handleSynthesize = async () => {
-    if (!personImage || !garmentImage) {
-      setError('人物写真と服の画像を両方選択してください');
-      return;
+    // 複数箇所モードのチェック
+    if (useMultiGarment) {
+      if (!personImage || multiGarments.length === 0) {
+        setError('人物写真と少なくとも1つの服画像を選択してください');
+        return;
+      }
+    } else {
+      if (!personImage || !garmentImage) {
+        setError('人物写真と服の画像を両方選択してください');
+        return;
+      }
     }
 
     setIsProcessing(true);
@@ -38,21 +49,57 @@ export default function Home() {
     setResultImage('');
 
     try {
-      const response = await fetch('/api/synthesize', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          personImageUrl: personImage,
-          garmentImageUrl: garmentImage,
-          apiType: selectedApi,
-          replacementMode,
-          garmentType,
-          preservePose,
-          poseData: poseData, // ポーズデータを追加
-        }),
-      });
+      let response;
+
+      if (useMultiGarment) {
+        // 複数箇所モードの処理
+        const garmentRequests = await Promise.all(
+          multiGarments.map(async (garment) => {
+            if (garment.file) {
+              // ファイルをBase64に変換
+              return new Promise<{ type: string; imageUrl: string }>((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve({
+                  type: garment.type,
+                  imageUrl: reader.result as string,
+                });
+                reader.readAsDataURL(garment.file);
+              });
+            }
+            return { type: garment.type, imageUrl: garment.imageUrl };
+          })
+        );
+
+        response = await fetch('/api/multi-synthesize', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            personImageUrl: personImage,
+            garments: garmentRequests,
+            preservePose,
+            preserveBackground: true,
+          }),
+        });
+      } else {
+        // 単一モードの処理（既存のコード）
+        response = await fetch('/api/synthesize', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            personImageUrl: personImage,
+            garmentImageUrl: garmentImage,
+            apiType: selectedApi,
+            replacementMode,
+            garmentType,
+            preservePose,
+            poseData: poseData, // ポーズデータを追加
+          }),
+        });
+      }
 
       const data = await response.json();
 
@@ -199,50 +246,109 @@ export default function Home() {
                 {/* Main Editor with modern card design */}
                 <div className="lg:col-span-2 order-2 lg:order-1">
                   <div className="backdrop-blur-lg bg-white/90 dark:bg-slate-900/90 rounded-2xl sm:rounded-3xl shadow-2xl p-4 sm:p-6 lg:p-8 border border-white/20">
-                    {/* Modern Image Upload Grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
-                      {/* Person Image Upload with modern styling */}
-                      <div className="group">
-                        <div className="mb-2 flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-violet-600 flex items-center justify-center">
-                            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    {/* Mode Toggle - Single vs Multi */}
+                    <div className="mb-6 p-1 bg-gray-100 dark:bg-gray-800 rounded-xl">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setUseMultiGarment(false)}
+                          className={`flex-1 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
+                            !useMultiGarment
+                              ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-md'
+                              : 'text-gray-600 dark:text-gray-400 hover:text-gray-800'
+                          }`}
+                        >
+                          単一変更
+                        </button>
+                        <button
+                          onClick={() => setUseMultiGarment(true)}
+                          className={`flex-1 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
+                            useMultiGarment
+                              ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-md'
+                              : 'text-gray-600 dark:text-gray-400 hover:text-gray-800'
+                          }`}
+                        >
+                          <span className="flex items-center justify-center gap-2">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                             </svg>
-                          </div>
-                          <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">人物写真</span>
-                        </div>
-                        <ImageUploader
-                          label=""
-                          onImageSelect={setPersonImage}
-                          currentImage={personImage}
-                        />
-                      </div>
-
-                      {/* Garment Image Upload with modern styling */}
-                      <div className="group">
-                        <div className="mb-2 flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-cyan-600 flex items-center justify-center">
-                            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h10l-5 5m0 0l-5-5m5 5v6" />
-                            </svg>
-                          </div>
-                          <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">服の写真</span>
-                        </div>
-                        <ImageUploader
-                          label=""
-                          onImageSelect={setGarmentImage}
-                          currentImage={garmentImage}
-                        />
+                            複数箇所
+                          </span>
+                        </button>
                       </div>
                     </div>
 
-                    {/* Garment Type Selector */}
-                    <div className="mb-6">
-                      <GarmentTypeSelector
-                        value={garmentType}
-                        onChange={setGarmentType}
-                      />
-                    </div>
+                    {/* Modern Image Upload Grid - Conditional based on mode */}
+                    {!useMultiGarment ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
+                        {/* Person Image Upload with modern styling */}
+                        <div className="group">
+                          <div className="mb-2 flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-violet-600 flex items-center justify-center">
+                              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                              </svg>
+                            </div>
+                            <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">人物写真</span>
+                          </div>
+                          <ImageUploader
+                            label=""
+                            onImageSelect={setPersonImage}
+                            currentImage={personImage}
+                          />
+                        </div>
+
+                        {/* Garment Image Upload with modern styling */}
+                        <div className="group">
+                          <div className="mb-2 flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-cyan-600 flex items-center justify-center">
+                              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h10l-5 5m0 0l-5-5m5 5v6" />
+                              </svg>
+                            </div>
+                            <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">服の写真</span>
+                          </div>
+                          <ImageUploader
+                            label=""
+                            onImageSelect={setGarmentImage}
+                            currentImage={garmentImage}
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="mb-6">
+                        {/* Person Image for Multi Mode */}
+                        <div className="mb-4">
+                          <div className="mb-2 flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-violet-600 flex items-center justify-center">
+                              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                              </svg>
+                            </div>
+                            <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">人物写真</span>
+                          </div>
+                          <ImageUploader
+                            label=""
+                            onImageSelect={setPersonImage}
+                            currentImage={personImage}
+                          />
+                        </div>
+
+                        {/* Multi Garment Selector */}
+                        <MultiGarmentSelector
+                          onImagesSelect={setMultiGarments}
+                        />
+                      </div>
+                    )}
+
+                    {/* Garment Type Selector - Only show in single mode */}
+                    {!useMultiGarment && (
+                      <div className="mb-6">
+                        <GarmentTypeSelector
+                          value={garmentType}
+                          onChange={setGarmentType}
+                        />
+                      </div>
+                    )}
 
                     {/* Pose Preservation Option */}
                     <div className="mb-6 p-4 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl">
