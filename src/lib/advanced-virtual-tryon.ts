@@ -84,7 +84,7 @@ export class AdvancedVirtualTryOn {
   /**
    * 服のカテゴリを自動検出
    */
-  static detectGarmentType(description?: string, imageAnalysis?: any): 'upper' | 'lower' | 'dress' | 'outer' {
+  static detectGarmentType(description?: string, imageAnalysis?: unknown): 'upper' | 'lower' | 'dress' | 'outer' {
     if (!description && !imageAnalysis) return 'upper';
 
     const text = (description || '').toLowerCase();
@@ -156,7 +156,7 @@ export class AdvancedVirtualTryOn {
   /**
    * ポーズ検出のためのキーポイント
    */
-  static detectPoseKeypoints(imageUrl: string): {
+  static detectPoseKeypoints(_imageUrl: string): {
     isSitting: boolean;
     isStanding: boolean;
     armPosition: 'up' | 'down' | 'side';

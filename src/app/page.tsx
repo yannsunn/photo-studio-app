@@ -5,7 +5,7 @@ import ImageUploader from '@/components/ImageUploader';
 import ClothingGenerator from '@/components/ClothingGenerator';
 import SavedImagesGallery from '@/components/SavedImagesGallery';
 import DownloadOptionsModal from '@/components/DownloadOptionsModal';
-import PoseEditor from '@/components/PoseEditor';
+// import PoseEditor from '@/components/PoseEditor'; // Reserved for future use
 import BatchProcessor from '@/components/BatchProcessor';
 import GarmentTypeSelector from '@/components/GarmentTypeSelector';
 import MultiGarmentSelector, { GarmentSelection } from '@/components/MultiGarmentSelector';
@@ -15,13 +15,13 @@ export default function Home() {
   const [personImage, setPersonImage] = useState<string>('');
   const [garmentImage, setGarmentImage] = useState<string>('');
   const [resultImage, setResultImage] = useState<string>('');
-  const [poseData, setPoseData] = useState<string>('');
+  const [poseData] = useState<string>(''); // setPoseData reserved for future use
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string>('');
   const [activeTab, setActiveTab] = useState<'create' | 'gallery' | 'batch'>('create');
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [showDownloadModal, setShowDownloadModal] = useState(false);
-  const [showPoseEditor, setShowPoseEditor] = useState(false);
+  // const [showPoseEditor, setShowPoseEditor] = useState(false); // Reserved for future use
   // 高品質モードのみを使用（APIコストは同じ）
   const selectedApi = 'seeDream'; // 常に高品質モードを使用
   const [replacementMode, setReplacementMode] = useState<'replace' | 'overlay'>('replace');

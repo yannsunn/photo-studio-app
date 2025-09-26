@@ -15,7 +15,6 @@ export interface GarmentSelection {
 
 export default function MultiGarmentSelector({ onImagesSelect, className = '' }: MultiGarmentSelectorProps) {
   const [selections, setSelections] = useState<GarmentSelection[]>([]);
-  const [activeTab, setActiveTab] = useState<'single' | 'multi'>('single');
 
   const garmentSlots = [
     {

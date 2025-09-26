@@ -121,7 +121,7 @@ export default function BatchProcessor({ onBatchComplete }: BatchProcessorProps)
         }));
 
         // 全て完了したらインターバルをクリア
-        const allCompleted = statusData.tasks.every((t: any) => t.status === 'completed' || t.status === 'failed');
+        const allCompleted = statusData.tasks.every((t: { status: string }) => t.status === 'completed' || t.status === 'failed');
         if (allCompleted) {
           clearInterval(checkInterval);
           setProcessing(false);
