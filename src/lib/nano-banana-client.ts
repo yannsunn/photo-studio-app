@@ -205,10 +205,13 @@ export class NanoBananaClient {
     } = {}
   ): Promise<NanoBananaResponse> {
     try {
-      // 自然言語の指示をプロンプトに変換
+      // 自然言語の指示をプロンプトに変換（顔の保持を強化）
       const modificationPrompt = `Modify the person's clothing in this image according to the following instructions: ${languagePrompt}
-        Keep the person's face, hair, pose, body position, and background exactly the same.
-        Only change the clothing according to the instructions.
+        CRITICAL: Keep the person's EXACT face, facial features, facial expression, eye shape, nose, mouth, and face structure UNCHANGED.
+        Preserve the person's original identity, hair style, hair color, skin tone, and body shape EXACTLY as they are.
+        Keep the person's pose, body position, and background exactly the same.
+        ONLY change what is explicitly mentioned in the instructions - typically clothing or accessories.
+        DO NOT alter the person's face or identity in any way.
         Ensure the modifications look natural and realistic.
         Maintain the photo-realistic quality of the image.`;
 

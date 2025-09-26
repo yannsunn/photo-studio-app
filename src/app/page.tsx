@@ -144,6 +144,13 @@ export default function Home() {
     setError('');
 
     try {
+      // 顔と体の特徴を保持する強い指示を追加
+      const enhancedPrompt = `${additionalPrompt}.
+        VERY IMPORTANT: Keep the person's original face, facial features, hair, skin tone, and body shape EXACTLY the same.
+        Only modify what is specifically mentioned in the instruction.
+        DO NOT change the person's identity or facial characteristics.
+        Preserve all facial details including eyes, nose, mouth, and overall face structure.`;
+
       const response = await fetch('/api/synthesize', {
         method: 'POST',
         headers: {
@@ -151,7 +158,7 @@ export default function Home() {
         },
         body: JSON.stringify({
           personImageUrl: resultImage, // 前回の結果を人物画像として使用
-          prompt: additionalPrompt,
+          prompt: enhancedPrompt,
           apiType: selectedApi,
           preservePose,
           useNaturalLanguageMode: true,
