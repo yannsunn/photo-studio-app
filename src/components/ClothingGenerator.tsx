@@ -261,13 +261,25 @@ export default function ClothingGenerator({ onSelectImage }: ClothingGeneratorPr
 
       {/* Modern Reference Gallery */}
       <div className="mt-6">
+        {selectedImageId && (
+          <div className="mb-3 p-3 bg-violet-50 dark:bg-violet-900/20 rounded-lg border border-violet-200 dark:border-violet-800">
+            <p className="text-xs text-violet-700 dark:text-violet-300 font-medium">
+              ✅ 服装が選択されました。左側で人物画像をアップロードして「合成」ボタンを押してください
+            </p>
+          </div>
+        )}
         <div className="flex justify-between items-center mb-3">
-          <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-            スタイルギャラリー
-            <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500">
-              {referenceImages.length}
-            </span>
-          </h3>
+          <div>
+            <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+              スタイルギャラリー
+              <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500">
+                {referenceImages.length}
+              </span>
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              画像をクリックして服装を選択
+            </p>
+          </div>
           {referenceImages.length > 6 && (
             <button
               onClick={() => {
@@ -316,10 +328,12 @@ export default function ClothingGenerator({ onSelectImage }: ClothingGeneratorPr
                   className="w-full h-20 object-cover"
                 />
                 {selectedImageId === img.id && (
-                  <div className="absolute inset-0 bg-gradient-to-t from-violet-600/80 to-transparent flex items-end justify-center pb-1">
-                    <span className="text-white text-xs font-bold">
-                      ✓
-                    </span>
+                  <div className="absolute inset-0 bg-violet-600/50 flex items-center justify-center">
+                    <div className="bg-white rounded-full p-1">
+                      <svg className="w-4 h-4 text-violet-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </div>
                   </div>
                 )}
               </div>
