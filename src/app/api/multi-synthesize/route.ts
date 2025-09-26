@@ -66,14 +66,14 @@ export async function POST(request: NextRequest) {
     }
 
     // 複数の服を組み合わせたプロンプトを生成
-    let combinedPrompt = generateMultiGarmentPrompt(garments, preservePose, preserveBackground);
+    // const combinedPrompt = generateMultiGarmentPrompt(garments, preservePose, preserveBackground);
 
     // 画像の結合処理（実際の実装では複数画像を処理）
     const client = new NanoBananaClient(apiKey);
 
     // 段階的な処理アプローチ
     let currentImage = personImageUrl;
-    let processedTypes: string[] = [];
+    const processedTypes: string[] = [];
 
     // 各服を順番に適用（理想的には並列処理）
     for (const garment of garments) {

@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { NanoBananaClient } from '@/lib/nano-banana-client';
-import { SeeDreamClient } from '@/lib/seedream-client';
+// import { SeeDreamClient } from '@/lib/seedream-client';
 import { SeedreamApiClient } from '@/lib/seedream-api-client';
 import { AdvancedVirtualTryOn } from '@/lib/advanced-virtual-tryon';
 
@@ -53,7 +53,8 @@ export async function POST(request: NextRequest) {
     // Parse request body
     body = await request.json();
     apiType = body.apiType || 'nanoBanana';
-    const { personImageUrl, garmentImageUrl, prompt, garmentType, replacementMode, enhancements, priority, preservePose, poseData } = body;
+    const { personImageUrl, garmentImageUrl, prompt, garmentType, replacementMode, enhancements, priority, preservePose } = body;
+    // poseData is reserved for future use
     // Get client IP for rate limiting
     const clientIp = request.headers.get('x-forwarded-for') ||
                      request.headers.get('x-real-ip') ||
@@ -122,7 +123,7 @@ export async function POST(request: NextRequest) {
         const client = new SeedreamApiClient(apiKey);
 
         // まず人物画像を処理
-        const processedPerson = await client.processImage({
+        await client.processImage({
           imageUrl: personImageUrl!,
           mode: 'standard',
           enhancements: enhancements as Array<'colorCorrection' | 'edgeOptimization'> || [],
