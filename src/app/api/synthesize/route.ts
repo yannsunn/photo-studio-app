@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { NanoBananaClient } from '@/lib/nano-banana-client';
+import { SeeDreamClient } from '@/lib/seedream-client';
 
 // Rate limiting store (in production, use Redis)
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
@@ -43,14 +44,14 @@ function checkRateLimit(clientId: string): boolean {
  * 服装合成を実行
  */
 export async function POST(request: NextRequest) {
-  let body: { personImageUrl?: string; garmentImageUrl?: string; prompt?: string; apiType?: string; garmentCategory?: string } = {};
+  let body: { personImageUrl?: string; garmentImageUrl?: string; prompt?: string; apiType?: string; garmentCategory?: string; replacementMode?: string } = {};
   let apiType = 'nanoBanana';
 
   try {
     // Parse request body
     body = await request.json();
     apiType = body.apiType || 'nanoBanana';
-    const { personImageUrl, garmentImageUrl, prompt } = body;
+    const { personImageUrl, garmentImageUrl, prompt, replacementMode } = body;
     // Get client IP for rate limiting
     const clientIp = request.headers.get('x-forwarded-for') ||
                      request.headers.get('x-real-ip') ||
@@ -72,9 +73,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate URLs
-    if (!NanoBananaClient.validateImageUrl(personImageUrl) ||
-        !NanoBananaClient.validateImageUrl(garmentImageUrl)) {
+    // Validate URLs with detailed error messages
+    const personUrlValid = NanoBananaClient.validateImageUrl(personImageUrl);
+    const garmentUrlValid = NanoBananaClient.validateImageUrl(garmentImageUrl);
+
+    if (!personUrlValid || !garmentUrlValid) {
+      console.error('URL validation failed:', {
+        personUrl: personImageUrl?.substring(0, 100),
+        garmentUrl: garmentImageUrl?.substring(0, 100),
+        personUrlValid,
+        garmentUrlValid,
+      });
       return NextResponse.json(
         { error: '無効な画像URLが提供されました' },
         { status: 400 }
@@ -91,46 +100,44 @@ export async function POST(request: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let responseData: any;
 
-    // 両方のAPIタイプで同じVirtual Try-On APIを使用（SeeDreamは現在利用不可）
-    if (false && apiType === 'seeDream') {
-      // SeeDream APIは現在利用できないため、同じVirtual Try-On APIを使用
-      // 将来的に別のAPIが利用可能になったら、ここに実装を追加
-    } else {
-      // Nano Banana APIを使用（デフォルト）
-      const apiKey = process.env.FAL_KEY || process.env.NANO_BANANA_KEY;
+    // 常に高品質モードを使用（APIコストは同じため）
+    // apiTypeパラメータは後方互換性のために残すが、常に高品質処理を実行
+    if (true) { // 常に高品質モード
+      // 高品質モード: 同じAPIだが異なるパラメータを使用
+      const apiKey = process.env.FAL_KEY || process.env.SEEDREAM_KEY;
 
-      // APIキーがない場合はデモモードで動作
-      // デモモード: fal.aiの残高問題が解決するまで一時的にダミー画像を返す
-      if (!apiKey || process.env.DEMO_MODE === 'true') { // APIキーがない場合もデモモード
-        // デモ用の合成画像（実際のサンプル画像URL）
+      if (!apiKey || process.env.DEMO_MODE === 'true') {
+        // デモモード
         result = {
           images: [
             {
-              url: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=512&h=768&fit=crop', // デモ用のサンプル画像
+              url: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=512&h=768&fit=crop',
               content_type: 'image/jpeg',
-              file_name: 'demo-synthesis.jpg',
+              file_name: 'demo-synthesis-hq.jpg',
               file_size: 100000,
               width: 512,
               height: 768,
             }
           ],
-          timings: {
-            inference: 1.5
-          },
-          demo: true // デモモードのフラグ
+          timings: { inference: 2.5 },
+          demo: true
         };
-
-        // 2秒待機して処理をシミュレート
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise(resolve => setTimeout(resolve, 3000));
       } else {
+        // 高品質モード: より詳細なパラメータでNano Bananaを使用
         const client = new NanoBananaClient(apiKey);
+        const highQualityPrompt = replacementMode === 'overlay'
+          ? `Add the garment as a layer with ultra-realistic lighting, shadows, and fabric physics. Preserve every detail and texture.`
+          : `Replace clothing with photorealistic quality. Perfect fabric draping, accurate shadows, preserve all details of the garment.`;
+
         result = await client.synthesizeOutfit(
-          personImageUrl!,  // Type assertion since we validated it exists
-          garmentImageUrl!,  // Type assertion since we validated it exists
+          personImageUrl!,
+          garmentImageUrl!,
           {
-            prompt: sanitizedPrompt,
+            prompt: sanitizedPrompt || highQualityPrompt,
             numImages: 1,
             outputFormat: 'png',
+            replacementMode: replacementMode as 'replace' | 'overlay' || 'replace',
           }
         );
       }
@@ -139,7 +146,7 @@ export async function POST(request: NextRequest) {
         success: true,
         images: result.images,
         timings: result.timings,
-        apiUsed: 'nanoBanana',
+        apiUsed: 'highQuality',
         demo: result.demo || false,
       };
     }

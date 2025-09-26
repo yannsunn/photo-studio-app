@@ -124,15 +124,25 @@ export class SeeDreamClient {
    * URLの検証
    */
   static validateImageUrl(url: string): boolean {
+    // 空文字チェック
+    if (!url || typeof url !== 'string') {
+      return false;
+    }
+
     // Data URLを許可
     if (url.startsWith('data:image/')) {
+      return true;
+    }
+
+    // Blob URLを許可
+    if (url.startsWith('blob:')) {
       return true;
     }
 
     // HTTP/HTTPS URLをチェック
     try {
       const urlObj = new URL(url);
-      return ['http:', 'https:'].includes(urlObj.protocol);
+      return ['http:', 'https:', 'blob:'].includes(urlObj.protocol);
     } catch {
       return false;
     }

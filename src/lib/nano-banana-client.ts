@@ -55,6 +55,7 @@ export class NanoBananaClient {
       prompt?: string;
       numImages?: number;
       outputFormat?: 'jpeg' | 'png';
+      replacementMode?: 'replace' | 'overlay';
     } = {}
   ): Promise<NanoBananaResponse> {
     // Default prompt is not used - using specific clothing prompt instead
@@ -70,11 +71,24 @@ export class NanoBananaClient {
       // Nano Banana (Gemini 2.5 Flash Image) を使用した服装変更
       // 人物画像と服の画像を組み合わせてプロンプトで指示
 
-      // 服装変更用の詳細なプロンプトを作成
-      const clothingPrompt = `Replace the person's current clothing with the garment shown in the second image.
-        Keep the person's face, pose, body position and background exactly the same.
-        Make the new clothing fit naturally on the person's body with realistic wrinkles and shadows.
-        Ensure the clothing colors, patterns, and textures match the reference garment exactly.`;
+      // 服装変更用の詳細なプロンプトを作成（モードに応じて変更）
+      let clothingPrompt: string;
+
+      if (options.replacementMode === 'overlay') {
+        // 重ね着モード
+        clothingPrompt = `Add the garment from the second image as an additional layer on top of the person's existing clothing.
+          Keep the person's face, pose, body position, background, and original clothing visible.
+          Make it look like the person is wearing the new garment over their existing outfit.
+          Ensure natural layering and realistic fit.`;
+      } else {
+        // 完全置き換えモード（デフォルト）
+        clothingPrompt = `Completely replace the person's current clothing with the garment shown in the second image.
+          Remove all original clothing and replace it entirely with the new garment.
+          Keep ONLY the person's face, hair, pose, body position and background exactly the same.
+          Make the new clothing fit naturally on the person's body with realistic wrinkles and shadows.
+          Ensure the clothing colors, patterns, and textures match the reference garment exactly.
+          DO NOT keep any part of the original clothing visible.`;
+      }
 
       const requestPayload = {
         // Nano Bananaのパラメータ
@@ -183,15 +197,25 @@ export class NanoBananaClient {
    * URLの検証
    */
   static validateImageUrl(url: string): boolean {
+    // 空文字チェック
+    if (!url || typeof url !== 'string') {
+      return false;
+    }
+
     // Data URLを許可
     if (url.startsWith('data:image/')) {
+      return true;
+    }
+
+    // Blob URLを許可
+    if (url.startsWith('blob:')) {
       return true;
     }
 
     // HTTP/HTTPS URLをチェック
     try {
       const urlObj = new URL(url);
-      return ['http:', 'https:'].includes(urlObj.protocol);
+      return ['http:', 'https:', 'blob:'].includes(urlObj.protocol);
     } catch {
       return false;
     }
