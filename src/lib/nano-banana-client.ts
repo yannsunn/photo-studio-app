@@ -77,17 +77,20 @@ export class NanoBananaClient {
       if (options.replacementMode === 'overlay') {
         // 重ね着モード
         clothingPrompt = `Add the garment from the second image as an additional layer on top of the person's existing clothing.
-          Keep the person's face, pose, body position, background, and original clothing visible.
-          Make it look like the person is wearing the new garment over their existing outfit.
+          IMPORTANT: Extract ONLY the CLOTHING/GARMENT from the second image, ignoring any person, face, or body in that image.
+          Keep the FIRST person's face, pose, body position, background, and original clothing visible.
+          Make it look like the FIRST person is wearing the new garment over their existing outfit.
           Ensure natural layering and realistic fit.`;
       } else {
         // 完全置き換えモード（デフォルト）
-        clothingPrompt = `Completely replace the person's current clothing with the garment shown in the second image.
-          Remove all original clothing and replace it entirely with the new garment.
-          Keep ONLY the person's face, hair, pose, body position and background exactly the same.
-          Make the new clothing fit naturally on the person's body with realistic wrinkles and shadows.
-          Ensure the clothing colors, patterns, and textures match the reference garment exactly.
-          DO NOT keep any part of the original clothing visible.`;
+        clothingPrompt = `Completely replace the FIRST person's current clothing with the garment shown in the second image.
+          CRITICAL: Extract ONLY the CLOTHING/GARMENT from the second image - ignore any face, person, or body that might be in the second image.
+          The FIRST image contains the person whose clothing should be changed.
+          The SECOND image is ONLY a reference for the clothing style/design to apply.
+          Keep the FIRST person's exact face, facial features, hair, skin tone, pose, and body position unchanged.
+          Remove all original clothing from the FIRST person and replace it with the garment style from the SECOND image.
+          Make the new clothing fit naturally on the FIRST person's body.
+          DO NOT use or merge any facial features or body parts from the second image - it is ONLY for clothing reference.`;
       }
 
       const requestPayload = {
@@ -210,6 +213,8 @@ export class NanoBananaClient {
         CRITICAL: Keep the person's EXACT face, facial features, facial expression, eye shape, nose, mouth, and face structure UNCHANGED.
         Preserve the person's original identity, hair style, hair color, skin tone, and body shape EXACTLY as they are.
         Keep the person's pose, body position, and background exactly the same.
+        FOCUS ONLY ON CLOTHING: The instructions refer ONLY to clothing/garments/accessories to change.
+        If the instruction mentions any clothing item, apply it ONLY to the person's outfit, not their face or body.
         ONLY change what is explicitly mentioned in the instructions - typically clothing or accessories.
         DO NOT alter the person's face or identity in any way.
         Ensure the modifications look natural and realistic.
