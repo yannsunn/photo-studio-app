@@ -74,10 +74,18 @@ export default function ClothingGenerator({ onSelectImage }: ClothingGeneratorPr
         // 生成された画像リストに追加
         setGeneratedImages(prev => [newImage, ...prev]);
 
+        // メインギャラリーにも保存（合成履歴として）
+        storage.saveImage({
+          personImage: '', // 服のみの画像なので人物画像は空
+          garmentImage: data.imageUrl,
+          resultImage: data.imageUrl,
+          prompt: customPrompt || CLOTHING_TEMPLATES[selectedCategory][0].en,
+        });
+
         // 全体のリストを再読み込み
         loadReferenceImages();
 
-        alert(`参考画像を生成してライブラリに保存しました: ${newImage.description}`);
+        alert(`参考画像を生成してライブラリとギャラリーに保存しました: ${newImage.description}`);
       }
     } catch (error) {
       console.error('画像生成エラー:', error);

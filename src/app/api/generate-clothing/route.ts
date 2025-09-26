@@ -57,8 +57,44 @@ export async function POST(request: NextRequest) {
       adjustedCategory = 'accessories'; // バッグもアクセサリーとして扱う
     }
 
+    // 日本語プロンプトを英語に変換して追加指示を含める
+    // 色の指示を優先的に処理
+    let enhancedPrompt = prompt;
+
+    // 日本語の色指示を英語に変換
+    const colorMap: {[key: string]: string} = {
+      '紺色': 'navy blue',
+      '紺': 'navy',
+      '青': 'blue',
+      '赤': 'red',
+      '白': 'white',
+      '黒': 'black',
+      '緑': 'green',
+      '黄色': 'yellow',
+      'オレンジ': 'orange',
+      'ピンク': 'pink',
+      '紫': 'purple',
+      '茶色': 'brown',
+      'グレー': 'gray',
+      '灰色': 'gray',
+      '金色': 'gold',
+      '銀色': 'silver'
+    };
+
+    // 色の指示を置換
+    for (const [jp, en] of Object.entries(colorMap)) {
+      enhancedPrompt = enhancedPrompt.replace(new RegExp(jp, 'g'), en);
+    }
+
+    // 光沢・質感の指示を英語に変換
+    enhancedPrompt = enhancedPrompt
+      .replace(/光沢のある/g, 'glossy')
+      .replace(/オーダーメイド/g, 'custom-made tailored')
+      .replace(/ジャケット/g, 'jacket')
+      .replace(/フォーマル/g, 'formal');
+
     // プロンプトを生成（白背景の商品画像用）
-    const fullPrompt = `${prompt}, ${CATEGORY_PROMPTS[adjustedCategory] || CATEGORY_PROMPTS.tops}`;
+    const fullPrompt = `${enhancedPrompt}, ${CATEGORY_PROMPTS[adjustedCategory] || CATEGORY_PROMPTS.tops}`;
 
     // fal.ai APIを呼び出し
     const response = await fetch(FAL_API_URL, {
