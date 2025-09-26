@@ -24,7 +24,7 @@ export default function Home() {
   const [showDownloadModal, setShowDownloadModal] = useState(false);
   // const [showPoseEditor, setShowPoseEditor] = useState(false); // Reserved for future use
   // 高品質モードのみを使用（APIコストは同じ）
-  const selectedApi = 'seeDream'; // 常に高品質モードを使用
+  const selectedApi = 'nanoBanana'; // Nano Banana APIを使用
   const [replacementMode, setReplacementMode] = useState<'replace' | 'overlay'>('replace');
   const [garmentType, setGarmentType] = useState<'upper' | 'lower' | 'dress' | 'outer'>('upper');
   const [preservePose, setPreservePose] = useState(true);
@@ -104,7 +104,7 @@ export default function Home() {
           },
           body: JSON.stringify({
             personImageUrl: personImage,
-            garmentImageUrl: useNaturalLanguage ? personImage : garmentImage, // 自然言語モードの場合は人物画像を再利用
+            garmentImageUrl: useNaturalLanguage ? undefined : garmentImage, // 自然言語モードの場合は服画像を送らない
             apiType: selectedApi,
             replacementMode,
             garmentType,
