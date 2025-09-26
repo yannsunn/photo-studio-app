@@ -5,17 +5,20 @@ import ImageUploader from '@/components/ImageUploader';
 import ClothingGenerator from '@/components/ClothingGenerator';
 import SavedImagesGallery from '@/components/SavedImagesGallery';
 import DownloadOptionsModal from '@/components/DownloadOptionsModal';
+import PoseEditor from '@/components/PoseEditor';
 import { storage } from '@/lib/storage';
 
 export default function Home() {
   const [personImage, setPersonImage] = useState<string>('');
   const [garmentImage, setGarmentImage] = useState<string>('');
   const [resultImage, setResultImage] = useState<string>('');
+  const [poseData, setPoseData] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string>('');
   const [activeTab, setActiveTab] = useState<'create' | 'gallery'>('create');
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [showDownloadModal, setShowDownloadModal] = useState(false);
+  const [showPoseEditor, setShowPoseEditor] = useState(false);
   // 高品質モードのみを使用（APIコストは同じ）
   const selectedApi = 'seeDream'; // 常に高品質モードを使用
   const [replacementMode, setReplacementMode] = useState<'replace' | 'overlay'>('replace');
@@ -41,6 +44,7 @@ export default function Home() {
           garmentImageUrl: garmentImage,
           apiType: selectedApi,
           replacementMode,
+          poseData: poseData, // ポーズデータを追加
         }),
       });
 
@@ -208,6 +212,31 @@ export default function Home() {
                       </div>
                     </div>
 
+                    {/* Pose Editor Toggle Button */}
+                    <div className="mb-6">
+                      <button
+                        onClick={() => setShowPoseEditor(!showPoseEditor)}
+                        className={`w-full px-4 py-3 rounded-xl font-semibold text-sm transition-all duration-300 ${
+                          showPoseEditor
+                            ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:shadow-xl hover:shadow-purple-500/25'
+                            : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                        }`}
+                      >
+                        <span className="flex items-center justify-center gap-2">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                          </svg>
+                          {showPoseEditor ? 'ポーズエディタを閉じる' : 'ポーズエディタを開く'}
+                        </span>
+                      </button>
+                    </div>
+
+                    {/* Pose Editor */}
+                    {showPoseEditor && (
+                      <div className="mb-6">
+                        <PoseEditor onPoseUpdate={setPoseData} />
+                      </div>
+                    )}
 
                     {/* Modern Mode Selector with sliding animation */}
                     <div className="mb-6 sm:mb-8">
