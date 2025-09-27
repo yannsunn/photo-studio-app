@@ -83,14 +83,38 @@ export class NanoBananaClient {
           Ensure natural layering and realistic fit.`;
       } else {
         // 完全置き換えモード（デフォルト）
-        clothingPrompt = `Completely replace the FIRST person's current clothing with the garment shown in the second image.
-          CRITICAL: Extract ONLY the CLOTHING/GARMENT from the second image - ignore any face, person, or body that might be in the second image.
-          The FIRST image contains the person whose clothing should be changed.
-          The SECOND image is ONLY a reference for the clothing style/design to apply.
-          Keep the FIRST person's exact face, facial features, hair, skin tone, pose, and body position unchanged.
-          Remove all original clothing from the FIRST person and replace it with the garment style from the SECOND image.
-          Make the new clothing fit naturally on the FIRST person's body.
-          DO NOT use or merge any facial features or body parts from the second image - it is ONLY for clothing reference.`;
+        clothingPrompt = `TASK: Virtual try-on - Replace the person's clothing in the FIRST image with the garment from the SECOND image.
+
+          CRITICAL INSTRUCTIONS:
+          1. FIRST IMAGE = Target person to dress (keep this person's face, body, pose completely unchanged)
+          2. SECOND IMAGE = Source garment/clothing only (extract ONLY the clothing item, ignore any person wearing it)
+
+          GARMENT EXTRACTION from SECOND IMAGE:
+          - If the second image shows a person wearing clothes: Extract ONLY the clothing/garment, NOT the person
+          - If the second image shows clothing on a mannequin: Extract ONLY the garment
+          - If the second image shows clothing laid flat: Use the entire garment design
+          - Focus on the complete garment: jacket, shirt, dress, pants, or whatever clothing item is shown
+          - Extract the FULL garment including all parts (sleeves, collar, buttons, pockets, etc.)
+
+          REPLACEMENT PROCESS:
+          - COMPLETELY REMOVE all original clothing from the FIRST person
+          - Replace with the EXTRACTED garment from the second image
+          - Ensure the new garment covers the appropriate body area completely
+          - Make the garment fit naturally on the FIRST person's body shape and pose
+
+          PRESERVE from FIRST IMAGE:
+          - Face, facial features, expression (100% unchanged)
+          - Hair style and color
+          - Skin tone
+          - Body pose and position
+          - Background
+          - Accessories (unless they conflict with the new garment)
+
+          QUALITY REQUIREMENTS:
+          - The new garment must look photorealistic
+          - Natural lighting and shadows
+          - Proper fit and draping on the body
+          - Complete replacement with no original clothing visible`;
       }
 
       const requestPayload = {
